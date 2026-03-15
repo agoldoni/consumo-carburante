@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Consumo Carburanti</string>
+    <string name="empty_list">Nessun rifornimento registrato</string>
+    <string name="nuovo_rifornimento">Nuovo Rifornimento</string>
+    <string name="data_ora">Data e ora</string>
+    <string name="chilometri">Chilometri (km)</string>
+    <string name="litri_benzina">Litri di benzina</string>
+    <string name="costo_eur">Costo (EUR)</string>
+    <string name="salva">Salva</string>
+    <string name="annulla">Annulla</string>
+    <string name="campo_obbligatorio">Campo obbligatorio</string>
+    <string name="valore_non_valido">Valore non valido</string>
+    <string name="menu_auto">Le mie auto</string>
+    <string name="nome_veicolo">Nome veicolo</string>
+    <string name="targa">Targa</string>
+    <string name="nuovo_veicolo">Nuovo Veicolo</string>
+    <string name="modifica_veicolo">Modifica Veicolo</string>
+    <string name="conferma_elimina_veicolo">Eliminare questo veicolo e tutti i suoi rifornimenti?</string>
+    <string name="elimina">Elimina</string>
+    <string name="seleziona_veicolo">Seleziona veicolo</string>
+    <string name="nessun_veicolo">Nessun veicolo registrato</string>
+    <string name="aggiungi_veicolo_prima">Aggiungi un veicolo dal menu laterale</string>
+    <string name="menu_info">Info app</string>
+    <string name="info_app_title">Consumo Carburanti</string>
+    <string name="modifica_rifornimento">Modifica Rifornimento</string>
+    <string name="conferma_elimina_rifornimento">Eliminare questo rifornimento?</string>
+    <string name="posizione">Posizione</string>
+    <string name="posizione_acquisita">Posizione acquisita</string>
+    <string name="posizione_non_disponibile">Posizione non disponibile</string>
+    <string name="permesso_posizione_negato">Permesso posizione negato</string>
+</resources>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Car body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M28,58 L28,52 L35,52 L42,40 L70,40 L78,52 L82,52 L82,58 L80,58 L80,62 L72,62 L72,58 L40,58 L40,62 L32,62 L32,58 Z" />
+
+    <!-- Roof / cabin -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M43,40 L48,32 L66,32 L70,40 Z" />
+
+    <!-- Windows -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M45,40 L49,34 L55,34 L55,40 Z" />
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M57,34 L65,34 L68,40 L57,40 Z" />
+
+    <!-- Front wheel -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M36,62 A4,4 0 1,1 36,61.99 Z" />
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M36,62 A1.5,1.5 0 1,1 36,61.99 Z" />
+
+    <!-- Rear wheel -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M76,62 A4,4 0 1,1 76,61.99 Z" />
+    <path
+        android:fillColor="#9E9E9E"
+        android:pathData="M76,62 A1.5,1.5 0 1,1 76,61.99 Z" />
+
+    <!-- Headlight -->
+    <path
+        android:fillColor="#FFC107"
+        android:pathData="M80,52 L82,52 L82,55 L80,55 Z" />
+
+    <!-- Taillight -->
+    <path
+        android:fillColor="#F44336"
+        android:pathData="M28,52 L30,52 L30,55 L28,55 Z" />
+
+    <!-- Fuel pump nozzle (small icon above car) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="0.5"
+        android:pathData="M60,26 L60,22 L64,22 L64,20 L66,20 L66,24 L62,24 L62,26 Z" />
+
+</vector>
