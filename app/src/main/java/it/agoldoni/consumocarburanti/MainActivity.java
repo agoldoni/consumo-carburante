@@ -36,15 +36,22 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -80,6 +87,13 @@ public class MainActivity extends AppCompatActivity {
                 pendingAfterPermission = null;
             });
 
+    private final ActivityResultLauncher<String[]> importFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null) {
+                    importData(uri);
+                }
+            });
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_auto) {
                 startActivity(new Intent(this, VeicoloActivity.class));
+            } else if (item.getItemId() == R.id.nav_import) {
+                importFileLauncher.launch(new String[]{"text/*"});
             } else if (item.getItemId() == R.id.nav_info) {
                 showInfoDialog();
             }
@@ -619,6 +635,109 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(this,
                         R.string.errore_esportazione, Toast.LENGTH_SHORT).show());
             }
+        });
+    }
+
+    private void importData(Uri uri) {
+        executor.execute(() -> {
+            int importati = 0;
+            int duplicati = 0;
+            int errori = 0;
+            Map<String, String> veicoloCache = new HashMap<>();
+
+            try (InputStream is = getContentResolver().openInputStream(uri);
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+                String header = reader.readLine();
+                if (header == null || !header.startsWith("Id,Veicolo,Data,")) {
+                    runOnUiThread(() -> Toast.makeText(this,
+                            R.string.file_non_valido, Toast.LENGTH_LONG).show());
+                    return;
+                }
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
+
+                    try {
+                        String[] fields = line.split(",", -1);
+                        if (fields.length < 6) {
+                            errori++;
+                            continue;
+                        }
+
+                        String id = fields[0].trim();
+                        String nomeVeicolo = fields[1].trim();
+                        String dataStr = fields[2].trim();
+                        int km = Integer.parseInt(fields[3].trim());
+                        double litri = Double.parseDouble(fields[4].trim());
+                        double costo = Double.parseDouble(fields[5].trim());
+                        Double lat = fields.length > 6 && !fields[6].trim().isEmpty()
+                                ? Double.parseDouble(fields[6].trim()) : null;
+                        Double lon = fields.length > 7 && !fields[7].trim().isEmpty()
+                                ? Double.parseDouble(fields[7].trim()) : null;
+
+                        // Deduplicazione tramite UUID
+                        if (rifornimentoDao.getById(id) != null) {
+                            duplicati++;
+                            continue;
+                        }
+
+                        // Cerca o crea veicolo
+                        String veicoloId = veicoloCache.get(nomeVeicolo);
+                        if (veicoloId == null) {
+                            Veicolo veicolo = veicoloDao.getByNome(nomeVeicolo);
+                            if (veicolo == null) {
+                                veicolo = new Veicolo();
+                                veicolo.setNome(nomeVeicolo);
+                                veicoloDao.insert(veicolo);
+                            }
+                            veicoloId = veicolo.getId();
+                            veicoloCache.put(nomeVeicolo, veicoloId);
+                        }
+
+                        // Parsing data
+                        Date data = dateFormat.parse(dataStr);
+                        if (data == null) {
+                            errori++;
+                            continue;
+                        }
+
+                        Rifornimento r = new Rifornimento();
+                        r.setId(id);
+                        r.setDatetime(data.getTime());
+                        r.setKm(km);
+                        r.setQtaBenzina(litri);
+                        r.setCosto(costo);
+                        r.setVeicoloId(veicoloId);
+                        r.setLatitude(lat);
+                        r.setLongitude(lon);
+
+                        rifornimentoDao.insert(r);
+                        importati++;
+
+                    } catch (NumberFormatException | ParseException e) {
+                        errori++;
+                    }
+                }
+
+            } catch (IOException e) {
+                runOnUiThread(() -> Toast.makeText(this,
+                        R.string.errore_importazione, Toast.LENGTH_LONG).show());
+                return;
+            }
+
+            final int finalImportati = importati;
+            final int finalDuplicati = duplicati;
+            final int finalErrori = errori;
+            runOnUiThread(() -> {
+                Toast.makeText(this,
+                        getString(R.string.importazione_completata,
+                                finalImportati, finalDuplicati, finalErrori),
+                        Toast.LENGTH_LONG).show();
+                loadVeicoli();
+            });
         });
     }
 

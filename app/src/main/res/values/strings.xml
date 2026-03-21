@@ -33,4 +33,8 @@
     <string name="nessun_rifornimento_da_esportare">Nessun rifornimento da esportare</string>
     <string name="condividi_rifornimenti">Condividi rifornimenti</string>
     <string name="errore_esportazione">Errore durante l\'esportazione</string>
+    <string name="importa_dati">Importa dati</string>
+    <string name="importazione_completata">Importazione completata: %1$d importati, %2$d duplicati, %3$d errori</string>
+    <string name="errore_importazione">Errore durante l\'importazione</string>
+    <string name="file_non_valido">File non valido o formato non riconosciuto</string>
 </resources>

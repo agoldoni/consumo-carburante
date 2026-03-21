@@ -28,4 +28,7 @@ public interface VeicoloDao {
 
     @Query("SELECT COUNT(*) FROM veicoli")
     int count();
+
+    @Query("SELECT * FROM veicoli WHERE nome = :nome LIMIT 1")
+    Veicolo getByNome(String nome);
 }

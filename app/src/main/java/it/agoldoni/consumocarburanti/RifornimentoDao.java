@@ -25,4 +25,7 @@ public interface RifornimentoDao {
 
     @Query("SELECT * FROM rifornimenti WHERE veicolo_id = :veicoloId ORDER BY datetime DESC")
     List<Rifornimento> getByVeicolo(String veicoloId);
+
+    @Query("SELECT * FROM rifornimenti WHERE id = :id")
+    Rifornimento getById(String id);
 }
