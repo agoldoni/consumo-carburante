@@ -29,4 +29,8 @@
     <string name="posizione_acquisita">Posizione acquisita</string>
     <string name="posizione_non_disponibile">Posizione non disponibile</string>
     <string name="permesso_posizione_negato">Permesso posizione negato</string>
+    <string name="condividi_dati">Condividi dati</string>
+    <string name="nessun_rifornimento_da_esportare">Nessun rifornimento da esportare</string>
+    <string name="condividi_rifornimenti">Condividi rifornimenti</string>
+    <string name="errore_esportazione">Errore durante l\'esportazione</string>
 </resources>

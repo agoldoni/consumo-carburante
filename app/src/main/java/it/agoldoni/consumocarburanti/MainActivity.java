@@ -6,12 +6,16 @@ import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -20,6 +24,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,9 +36,13 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -532,6 +541,85 @@ public class MainActivity extends AppCompatActivity {
 
     private String getText(TextInputEditText editText) {
         return editText.getText() != null ? editText.getText().toString().trim() : "";
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_share) {
+            shareData();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void shareData() {
+        if (selectedVeicoloId == null || veicoli == null || veicoli.isEmpty()) {
+            Toast.makeText(this, R.string.nessun_rifornimento_da_esportare, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String veicoloNome = "";
+        for (Veicolo v : veicoli) {
+            if (v.getId().equals(selectedVeicoloId)) {
+                veicoloNome = v.getNome() != null ? v.getNome() : "veicolo";
+                break;
+            }
+        }
+
+        final String nomeVeicolo = veicoloNome.replaceAll("[^a-zA-Z0-9_\\-]", "_");
+        final String nomeVeicoloOriginal = veicoloNome;
+
+        executor.execute(() -> {
+            List<Rifornimento> list = rifornimentoDao.getByVeicolo(selectedVeicoloId);
+
+            if (list.isEmpty()) {
+                runOnUiThread(() -> Toast.makeText(this,
+                        R.string.nessun_rifornimento_da_esportare, Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            String exportDate = new SimpleDateFormat("yyyyMMdd", Locale.ITALY).format(new Date());
+            String fileName = "rifornimenti_" + nomeVeicolo + "_" + exportDate + ".csv";
+            File csvFile = new File(getCacheDir(), fileName);
+
+            try (FileWriter writer = new FileWriter(csvFile)) {
+                writer.write("Id,Veicolo,Data,Km,Litri,Costo,Latitudine,Longitudine\n");
+
+                for (Rifornimento r : list) {
+                    String data = dateFormat.format(new Date(r.getDatetime()));
+                    String lat = r.getLatitude() != null
+                            ? String.format(Locale.US, "%.5f", r.getLatitude()) : "";
+                    String lon = r.getLongitude() != null
+                            ? String.format(Locale.US, "%.5f", r.getLongitude()) : "";
+
+                    writer.write(String.format(Locale.US, "%s,%s,%s,%d,%.2f,%.2f,%s,%s\n",
+                            r.getId(), nomeVeicoloOriginal, data, r.getKm(), r.getQtaBenzina(), r.getCosto(), lat, lon));
+                }
+
+                runOnUiThread(() -> {
+                    Uri uri = FileProvider.getUriForFile(this,
+                            getApplicationContext().getPackageName() + ".fileprovider",
+                            csvFile);
+
+                    Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                    shareIntent.setType("text/csv");
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivity(Intent.createChooser(shareIntent,
+                            getString(R.string.condividi_rifornimenti)));
+                });
+
+            } catch (IOException e) {
+                runOnUiThread(() -> Toast.makeText(this,
+                        R.string.errore_esportazione, Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 
     @Override

@@ -56,4 +56,9 @@ Minimal: `appcompat:1.6.1`, `material:1.11.0`, `constraintlayout:2.1.4`. No netw
 
 ## Conventions
 
-- I piani di implementazione e le feature spec vanno sempre salvati nella cartella `prompts/`
+- I piani di implementazione e le feature spec vanno sempre salvati nella cartella `docs/prompts/`
+- La documentazione di ogni nuova feature va salvata nella cartella `docs/features/`
+- Quando l'utente scrive **"nuova feature: xxx"**, devi:
+  1. Creare il file `docs/prompts/xxx.md` con la descrizione e il piano della feature
+  2. Creare il file `docs/features/xxx.md` con la documentazione della feature
+  3. Entrare in modalità pianificazione (plan mode)
