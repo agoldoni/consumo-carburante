@@ -35,7 +35,7 @@ case "$BUILD_TYPE" in
     release)
         echo "[INFO] Avvio build release..."
         ./gradlew assembleRelease
-        APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+        APK_PATH="app/build/outputs/apk/release/app-release.apk"
         ;;
     clean)
         echo "[INFO] Pulizia progetto..."
