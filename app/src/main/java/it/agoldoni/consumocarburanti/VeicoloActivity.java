@@ -102,6 +102,7 @@ public class VeicoloActivity extends AppCompatActivity implements VeicoloAdapter
                 existing.setTarga(targa);
                 executor.execute(() -> {
                     dao.update(existing);
+                    MqttSyncManager.getInstance(VeicoloActivity.this).publishVeicolo(existing);
                     runOnUiThread(this::loadData);
                 });
             } else {
@@ -110,6 +111,7 @@ public class VeicoloActivity extends AppCompatActivity implements VeicoloAdapter
                 veicolo.setTarga(targa);
                 executor.execute(() -> {
                     dao.insert(veicolo);
+                    MqttSyncManager.getInstance(VeicoloActivity.this).publishVeicolo(veicolo);
                     runOnUiThread(this::loadData);
                 });
             }
@@ -131,6 +133,8 @@ public class VeicoloActivity extends AppCompatActivity implements VeicoloAdapter
                 .setPositiveButton(R.string.elimina, (d, which) -> {
                     executor.execute(() -> {
                         dao.delete(veicolo);
+                        MqttSyncManager.getInstance(VeicoloActivity.this)
+                                .publishDeleteVeicolo(veicolo.getId());
                         runOnUiThread(this::loadData);
                     });
                 })

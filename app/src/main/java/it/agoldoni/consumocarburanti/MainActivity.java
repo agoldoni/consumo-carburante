@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fab;
     private Spinner spinnerVeicolo;
     private DrawerLayout drawerLayout;
+    private Toolbar toolbar;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ITALY);
@@ -101,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         drawerLayout = findViewById(R.id.drawerLayout);
@@ -116,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, VeicoloActivity.class));
             } else if (item.getItemId() == R.id.nav_import) {
                 importFileLauncher.launch(new String[]{"text/*"});
+            } else if (item.getItemId() == R.id.nav_sync) {
+                startActivity(new Intent(this, MqttConfigActivity.class));
             } else if (item.getItemId() == R.id.nav_info) {
                 showInfoDialog();
             }
@@ -126,6 +129,10 @@ public class MainActivity extends AppCompatActivity {
         AppDatabase db = AppDatabase.getInstance(this);
         rifornimentoDao = db.rifornimentoDao();
         veicoloDao = db.veicoloDao();
+
+        MqttSyncManager syncManager = MqttSyncManager.getInstance(this);
+        syncManager.setOnSyncDataReceivedListener(this::loadVeicoli);
+        syncManager.setOnConnectionStateChangedListener(this::updateSyncStatusIcon);
 
         emptyView = findViewById(R.id.emptyView);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
@@ -145,6 +152,8 @@ public class MainActivity extends AppCompatActivity {
                         .setPositiveButton(R.string.elimina, (d, which) -> {
                             executor.execute(() -> {
                                 rifornimentoDao.delete(rifornimento);
+                                MqttSyncManager.getInstance(MainActivity.this)
+                                        .publishDeleteRifornimento(rifornimento.getId());
                                 runOnUiThread(() -> loadData());
                             });
                         })
@@ -183,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadVeicoli();
+        MqttSyncManager.getInstance(this).reconnectIfNeeded();
     }
 
     private boolean hasLocationPermission() {
@@ -398,6 +408,7 @@ public class MainActivity extends AppCompatActivity {
 
             executor.execute(() -> {
                 rifornimentoDao.insert(r);
+                MqttSyncManager.getInstance(MainActivity.this).publishRifornimento(r);
                 runOnUiThread(this::loadData);
             });
 
@@ -533,6 +544,7 @@ public class MainActivity extends AppCompatActivity {
 
             executor.execute(() -> {
                 rifornimentoDao.update(rifornimento);
+                MqttSyncManager.getInstance(MainActivity.this).publishRifornimento(rifornimento);
                 runOnUiThread(this::loadData);
             });
 
@@ -562,6 +574,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        updateSyncStatusIcon(MqttSyncManager.getInstance(this).isConnected());
         return true;
     }
 
@@ -570,8 +583,29 @@ public class MainActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_share) {
             shareData();
             return true;
+        } else if (item.getItemId() == R.id.action_sync_status) {
+            boolean isConnected = MqttSyncManager.getInstance(this).isConnected();
+            Toast.makeText(this,
+                    isConnected ? R.string.mqtt_stato_connesso : R.string.mqtt_stato_disconnesso,
+                    Toast.LENGTH_SHORT).show();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateSyncStatusIcon(boolean isConnected) {
+        if (toolbar == null) return;
+        Menu menu = toolbar.getMenu();
+        if (menu == null) return;
+        MenuItem item = menu.findItem(R.id.action_sync_status);
+        if (item != null) {
+            item.setIcon(isConnected
+                    ? R.drawable.ic_sync_connected
+                    : R.drawable.ic_sync_disconnected);
+            item.setTitle(isConnected
+                    ? R.string.mqtt_stato_connesso
+                    : R.string.mqtt_stato_disconnesso);
+        }
     }
 
     private void shareData() {
