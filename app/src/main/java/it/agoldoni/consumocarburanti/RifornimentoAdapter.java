@@ -53,7 +53,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
         holder.textDatetime.setText(dateFormat.format(new Date(item.getDatetime())));
         holder.textCosto.setText(String.format(Locale.ITALY, "€ %.2f", item.getCosto()));
         holder.textKm.setText(String.format(Locale.ITALY, "Km: %,d", item.getKm()));
-        holder.textLitri.setText(String.format(Locale.ITALY, "Litri: %.1f", item.getQtaBenzina()));
+        holder.textLitri.setText(String.format(Locale.ITALY, "Litri: %.2f", item.getQtaBenzina()));
 
         // Icona mappa
         if (item.getLatitude() != null && item.getLongitude() != null) {

@@ -215,17 +215,24 @@ public class MqttSyncManager {
             return;
         }
 
-        // Deduplication: skip if already exists
-        if (db.veicoloDao().getById(id) != null) {
-            return;
-        }
-
         String json = new String(payload, StandardCharsets.UTF_8);
-        Veicolo veicolo = gson.fromJson(json, Veicolo.class);
-        db.veicoloDao().insert(veicolo);
-        Log.i(TAG, "Inserted veicolo: " + veicolo.getNome());
-        showToast(R.string.mqtt_ricevuto_veicolo);
-        notifyListener();
+        Veicolo remote = gson.fromJson(json, Veicolo.class);
+        Veicolo local = db.veicoloDao().getById(id);
+
+        if (local == null) {
+            db.veicoloDao().insert(remote);
+            Log.i(TAG, "Inserted veicolo: " + remote.getNome());
+            showToast(R.string.mqtt_ricevuto_veicolo);
+            notifyListener();
+        } else if (remote.getUpdatedAt() > local.getUpdatedAt()) {
+            local.setNome(remote.getNome());
+            local.setTarga(remote.getTarga());
+            local.setUpdatedAt(remote.getUpdatedAt());
+            db.veicoloDao().update(local);
+            Log.i(TAG, "Updated veicolo: " + local.getNome());
+            showToast(R.string.mqtt_ricevuto_veicolo);
+            notifyListener();
+        }
     }
 
     private void handleRifornimento(String topic, byte[] payload) {
@@ -243,25 +250,37 @@ public class MqttSyncManager {
             return;
         }
 
-        // Deduplication: skip if already exists
-        if (db.rifornimentoDao().getById(id) != null) {
-            return;
-        }
-
         String json = new String(payload, StandardCharsets.UTF_8);
-        Rifornimento rifornimento = gson.fromJson(json, Rifornimento.class);
+        Rifornimento remote = gson.fromJson(json, Rifornimento.class);
 
         // Check FK: veicolo must exist
-        if (rifornimento.getVeicoloId() != null
-                && db.veicoloDao().getById(rifornimento.getVeicoloId()) == null) {
+        if (remote.getVeicoloId() != null
+                && db.veicoloDao().getById(remote.getVeicoloId()) == null) {
             Log.w(TAG, "Skipping rifornimento " + id + ": veicolo not found");
             return;
         }
 
-        db.rifornimentoDao().insert(rifornimento);
-        Log.i(TAG, "Inserted rifornimento: " + id);
-        showToast(R.string.mqtt_ricevuto);
-        notifyListener();
+        Rifornimento local = db.rifornimentoDao().getById(id);
+
+        if (local == null) {
+            db.rifornimentoDao().insert(remote);
+            Log.i(TAG, "Inserted rifornimento: " + id);
+            showToast(R.string.mqtt_ricevuto);
+            notifyListener();
+        } else if (remote.getUpdatedAt() > local.getUpdatedAt()) {
+            local.setDatetime(remote.getDatetime());
+            local.setKm(remote.getKm());
+            local.setQtaBenzina(remote.getQtaBenzina());
+            local.setCosto(remote.getCosto());
+            local.setVeicoloId(remote.getVeicoloId());
+            local.setLatitude(remote.getLatitude());
+            local.setLongitude(remote.getLongitude());
+            local.setUpdatedAt(remote.getUpdatedAt());
+            db.rifornimentoDao().update(local);
+            Log.i(TAG, "Updated rifornimento: " + id);
+            showToast(R.string.mqtt_ricevuto);
+            notifyListener();
+        }
     }
 
     private void notifyListener() {

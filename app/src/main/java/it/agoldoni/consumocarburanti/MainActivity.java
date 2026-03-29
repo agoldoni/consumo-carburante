@@ -536,6 +536,7 @@ public class MainActivity extends AppCompatActivity {
             rifornimento.setKm(km);
             rifornimento.setQtaBenzina(litri);
             rifornimento.setCosto(costo);
+            rifornimento.setUpdatedAt(System.currentTimeMillis());
             // Aggiorna posizione solo se acquisita nuova (non sovrascrive quella esistente)
             if (lastKnownLocation != null) {
                 rifornimento.setLatitude(lastKnownLocation.getLatitude());

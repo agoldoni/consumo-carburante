@@ -17,8 +17,11 @@ public class Veicolo {
 
     private String targa;
 
+    private long updatedAt;
+
     public Veicolo() {
         this.id = UUID.randomUUID().toString();
+        this.updatedAt = System.currentTimeMillis();
     }
 
     @NonNull
@@ -44,6 +47,14 @@ public class Veicolo {
 
     public void setTarga(String targa) {
         this.targa = targa;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     @NonNull

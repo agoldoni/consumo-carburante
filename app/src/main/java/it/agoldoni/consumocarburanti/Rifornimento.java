@@ -40,8 +40,11 @@ public class Rifornimento {
     @ColumnInfo(name = "longitude")
     private Double longitude;
 
+    private long updatedAt;
+
     public Rifornimento() {
         this.id = UUID.randomUUID().toString();
+        this.updatedAt = System.currentTimeMillis();
     }
 
     @NonNull
@@ -107,5 +110,13 @@ public class Rifornimento {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

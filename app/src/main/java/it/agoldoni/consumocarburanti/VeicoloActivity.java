@@ -100,6 +100,7 @@ public class VeicoloActivity extends AppCompatActivity implements VeicoloAdapter
             if (existing != null) {
                 existing.setNome(nome);
                 existing.setTarga(targa);
+                existing.setUpdatedAt(System.currentTimeMillis());
                 executor.execute(() -> {
                     dao.update(existing);
                     MqttSyncManager.getInstance(VeicoloActivity.this).publishVeicolo(existing);
