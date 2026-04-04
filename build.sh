@@ -33,6 +33,20 @@ case "$BUILD_TYPE" in
         APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
         ;;
     release)
+        # Verifica che le credenziali di firma siano disponibili
+        KEYSTORE_FILE="${KEYSTORE_FILE:-$HOME/.android/release-key.jks}"
+        if [ ! -f "$KEYSTORE_FILE" ]; then
+            echo "[ERRORE] Keystore non trovato: $KEYSTORE_FILE"
+            echo "         Imposta KEYSTORE_FILE per un percorso diverso."
+            exit 1
+        fi
+        if [ -z "${KEYSTORE_PASSWORD:-}" ] || [ -z "${KEY_PASSWORD:-}" ]; then
+            echo "[ERRORE] Per il build release servono le variabili d'ambiente:"
+            echo "         export KEYSTORE_PASSWORD=<password>"
+            echo "         export KEY_ALIAS=<alias>        (default: release)"
+            echo "         export KEY_PASSWORD=<password>"
+            exit 1
+        fi
         echo "[INFO] Avvio build release..."
         ./gradlew assembleRelease
         APK_PATH="app/build/outputs/apk/release/app-release.apk"

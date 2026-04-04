@@ -22,10 +22,10 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('release-key.jks')
-            storePassword 'consumocarburanti2024'
-            keyAlias 'consumo_carburanti'
-            keyPassword 'consumocarburanti2024'
+            storeFile file(System.getenv('KEYSTORE_FILE') ?: "${System.getProperty('user.home')}/.android/release-key.jks")
+            storePassword System.getenv('KEYSTORE_PASSWORD') ?: ''
+            keyAlias System.getenv('KEY_ALIAS') ?: 'release'
+            keyPassword System.getenv('KEY_PASSWORD') ?: ''
         }
     }
 

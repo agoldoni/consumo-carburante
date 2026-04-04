@@ -71,20 +71,30 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
             holder.btnMap.setOnClickListener(null);
         }
 
-        // Calcolo km/l: la lista è DESC, quindi position+1 è il rifornimento precedente
-        if (position < items.size() - 1) {
-            Rifornimento precedente = items.get(position + 1);
-            int kmPercorsi = item.getKm() - precedente.getKm();
-            if (kmPercorsi > 0 && item.getQtaBenzina() > 0) {
-                double kmPerLitro = (double) kmPercorsi / item.getQtaBenzina();
+        // Calcolo km/l: mostrato sulla voce precedente (più vecchia) perché i km
+        // sono stati percorsi con il carburante di quel rifornimento.
+        // La lista è DESC, quindi position-1 è il rifornimento successivo (più recente).
+        if (position > 0) {
+            Rifornimento successivo = items.get(position - 1);
+            int kmPercorsi = successivo.getKm() - item.getKm();
+            if (kmPercorsi > 0 && successivo.getQtaBenzina() > 0) {
+                double kmPerLitro = (double) kmPercorsi / successivo.getQtaBenzina();
                 holder.textConsumo.setText(String.format(Locale.ITALY, "Consumo: %.1f km/l", kmPerLitro));
                 holder.textConsumo.setVisibility(View.VISIBLE);
+
+                // Costo per 100 km: (100 / km_per_litro) × prezzo_al_litro
+                double prezzoAlLitro = successivo.getCosto() / successivo.getQtaBenzina();
+                double costoPer100km = (100.0 / kmPerLitro) * prezzoAlLitro;
+                holder.textCostoKm.setText(String.format(Locale.ITALY, "Costo: %.2f €/100km", costoPer100km));
+                holder.textCostoKm.setVisibility(View.VISIBLE);
             } else {
                 holder.textConsumo.setVisibility(View.GONE);
+                holder.textCostoKm.setVisibility(View.GONE);
             }
         } else {
-            // Prima voce (la più vecchia): nessun dato precedente
+            // Ultimo rifornimento (il più recente): consumo non ancora calcolabile
             holder.textConsumo.setVisibility(View.GONE);
+            holder.textCostoKm.setVisibility(View.GONE);
         }
 
         holder.btnEdit.setOnClickListener(v -> {
@@ -106,6 +116,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
         final TextView textKm;
         final TextView textLitri;
         final TextView textConsumo;
+        final TextView textCostoKm;
         final ImageButton btnMap;
         final ImageButton btnEdit;
         final ImageButton btnDelete;
@@ -117,6 +128,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
             textKm = itemView.findViewById(R.id.textKm);
             textLitri = itemView.findViewById(R.id.textLitri);
             textConsumo = itemView.findViewById(R.id.textConsumo);
+            textCostoKm = itemView.findViewById(R.id.textCostoKm);
             btnMap = itemView.findViewById(R.id.btnMap);
             btnEdit = itemView.findViewById(R.id.btnEditRifornimento);
             btnDelete = itemView.findViewById(R.id.btnDeleteRifornimento);

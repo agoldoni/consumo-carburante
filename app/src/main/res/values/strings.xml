@@ -62,4 +62,5 @@
     <string name="mqtt_eliminato_remoto">Sync: eliminato da remoto</string>
     <string name="mqtt_stato_connesso">MQTT connesso</string>
     <string name="mqtt_stato_disconnesso">MQTT disconnesso</string>
+    <string name="costo_per_100km">Costo: %.2f €/100km</string>
 </resources>

@@ -67,6 +67,16 @@
             android:textSize="14sp"
             android:textColor="?attr/colorPrimary" />
 
+        <!-- Row 3b: Costo per 100 km -->
+        <TextView
+            android:id="@+id/textCostoKm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textSize="14sp"
+            android:textColor="?attr/colorPrimary"
+            android:visibility="gone" />
+
         <!-- Row 4: Pulsanti allineati a destra -->
         <LinearLayout
             android:layout_width="match_parent"
