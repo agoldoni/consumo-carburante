@@ -85,6 +85,12 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
         if (position > 0) {
             Rifornimento successivo = items.get(position - 1);
             int kmPercorsi = successivo.getKm() - item.getKm();
+            if (kmPercorsi > 0) {
+                holder.textKmParziali.setText(String.format(Locale.ITALY, "%,d", kmPercorsi));
+                holder.textKmParziali.setVisibility(View.VISIBLE);
+            } else {
+                holder.textKmParziali.setVisibility(View.GONE);
+            }
             if (kmPercorsi > 0 && successivo.getQtaBenzina() > 0) {
                 double kmPerLitro = (double) kmPercorsi / successivo.getQtaBenzina();
                 if (useL100km) {
@@ -110,6 +116,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
             // Ultimo rifornimento (il più recente): consumo non ancora calcolabile
             holder.textConsumo.setVisibility(View.GONE);
             holder.textCostoKm.setVisibility(View.GONE);
+            holder.textKmParziali.setVisibility(View.GONE);
         }
 
         holder.btnEdit.setOnClickListener(v -> {
@@ -129,6 +136,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
         final TextView textDatetime;
         final TextView textCosto;
         final TextView textKm;
+        final TextView textKmParziali;
         final TextView textLitri;
         final TextView textConsumo;
         final TextView textCostoKm;
@@ -141,6 +149,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
             textDatetime = itemView.findViewById(R.id.textDatetime);
             textCosto = itemView.findViewById(R.id.textCosto);
             textKm = itemView.findViewById(R.id.textKm);
+            textKmParziali = itemView.findViewById(R.id.textKmParziali);
             textLitri = itemView.findViewById(R.id.textLitri);
             textConsumo = itemView.findViewById(R.id.textConsumo);
             textCostoKm = itemView.findViewById(R.id.textCostoKm);

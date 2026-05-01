@@ -46,9 +46,16 @@
 
             <TextView
                 android:id="@+id/textKm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/textKmParziali"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginStart="8dp"
                 android:textSize="14sp" />
 
             <TextView

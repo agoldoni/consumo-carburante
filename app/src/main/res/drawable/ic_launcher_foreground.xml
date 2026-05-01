@@ -2,58 +2,81 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
+    android:viewportWidth="512"
+    android:viewportHeight="512">
 
-    <!-- Car body -->
+    <!-- Pump body -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M28,58 L28,52 L35,52 L42,40 L70,40 L78,52 L82,52 L82,58 L80,58 L80,62 L72,62 L72,58 L40,58 L40,62 L32,62 L32,58 Z" />
+        android:pathData="M173,160 L287,160 Q305,160 305,178 L305,327 Q305,345 287,345 L173,345 Q155,345 155,327 L155,178 Q155,160 173,160 Z"
+        android:fillColor="#E0F2F1"/>
 
-    <!-- Roof / cabin -->
+    <!-- Pump screen -->
     <path
-        android:fillColor="#E0E0E0"
-        android:pathData="M43,40 L48,32 L66,32 L70,40 Z" />
+        android:pathData="M185,185 L275,185 Q285,185 285,195 L285,245 Q285,255 275,255 L185,255 Q175,255 175,245 L175,195 Q175,185 185,185 Z"
+        android:fillColor="#00695C"/>
 
-    <!-- Windows -->
+    <!-- Screen line 1 -->
     <path
-        android:fillColor="#1565C0"
-        android:pathData="M45,40 L49,34 L55,34 L55,40 Z" />
-    <path
-        android:fillColor="#1565C0"
-        android:pathData="M57,34 L65,34 L68,40 L57,40 Z" />
+        android:pathData="M190,204 L270,204 Q194,204 194,208.5 L270,208.5 Q270,204 270,204 Z
+        M190,200 Q190,213 194,213 L270,213 Q274,213 274,208.5 Q274,200 270,200 Z"
+        android:fillColor="#80CBC4"/>
 
-    <!-- Front wheel -->
+    <!-- Screen line 1 (rect) -->
     <path
-        android:fillColor="#424242"
-        android:pathData="M36,62 A4,4 0 1,1 36,61.99 Z" />
-    <path
-        android:fillColor="#9E9E9E"
-        android:pathData="M36,62 A1.5,1.5 0 1,1 36,61.99 Z" />
+        android:pathData="M190,200 L270,200 Q274,200 274,204.5 L274,208.5 Q274,213 270,213 L190,213 Q186,213 186,208.5 L186,204.5 Q186,200 190,200 Z"
+        android:fillColor="#80CBC4"/>
 
-    <!-- Rear wheel -->
+    <!-- Screen line 2 -->
     <path
-        android:fillColor="#424242"
-        android:pathData="M76,62 A4,4 0 1,1 76,61.99 Z" />
-    <path
-        android:fillColor="#9E9E9E"
-        android:pathData="M76,62 A1.5,1.5 0 1,1 76,61.99 Z" />
+        android:pathData="M190,222 L245,222 Q249,222 249,226.5 L249,230.5 Q249,235 245,235 L190,235 Q186,235 186,230.5 L186,226.5 Q186,222 190,222 Z"
+        android:fillColor="#80CBC4"/>
 
-    <!-- Headlight -->
+    <!-- Pump base -->
     <path
-        android:fillColor="#FFC107"
-        android:pathData="M80,52 L82,52 L82,55 L80,55 Z" />
+        android:pathData="M142,345 L370,345 Q380,345 380,355 L380,365 Q380,375 370,375 L142,375 Q132,375 132,365 L132,355 Q132,345 142,345 Z"
+        android:fillColor="#B2DFDB"/>
 
-    <!-- Taillight -->
+    <!-- Nozzle arm -->
     <path
-        android:fillColor="#F44336"
-        android:pathData="M28,52 L30,52 L30,55 L28,55 Z" />
+        android:pathData="M304,195 L354,195 Q360,195 360,201.5 L360,207.5 Q360,214 354,214 L304,214 Q298,214 298,207.5 L298,201.5 Q298,195 304,195 Z"
+        android:fillColor="#B2DFDB"/>
 
-    <!-- Fuel pump nozzle (small icon above car) -->
+    <!-- Nozzle hose -->
     <path
-        android:fillColor="#FFFFFF"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="0.5"
-        android:pathData="M60,26 L60,22 L64,22 L64,20 L66,20 L66,24 L62,24 L62,26 Z" />
+        android:pathData="M354,201 Q402,201 402,242 Q402,287 375,297"
+        android:strokeColor="#B2DFDB"
+        android:strokeWidth="12"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+
+    <!-- Nozzle tip -->
+    <path
+        android:pathData="M355,290 L397,290 Q405,290 405,298 L405,310 Q405,318 397,318 L355,318 Q347,318 347,310 L347,298 Q347,290 355,290 Z"
+        android:fillColor="#E0F2F1"
+        android:translateX="0"
+        android:translateY="0"/>
+
+    <!-- Fuel drop -->
+    <path
+        android:pathData="M365,313 Q355,324 355,332 Q355,345 365,345 Q375,345 375,332 Q375,324 365,313 Z"
+        android:fillColor="#26A69A"/>
+
+    <!-- Decorative dot 1 -->
+    <path
+        android:pathData="M410,111 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0"
+        android:fillColor="#80CBC4"
+        android:fillAlpha="0.7"/>
+
+    <!-- Decorative dot 2 -->
+    <path
+        android:pathData="M440,155 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#80CBC4"
+        android:fillAlpha="0.5"/>
+
+    <!-- Decorative dot 3 -->
+    <path
+        android:pathData="M100,390 m-7,0 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0"
+        android:fillColor="#80CBC4"
+        android:fillAlpha="0.4"/>
 
 </vector>
