@@ -14,6 +14,7 @@
 bin/
 gen/
 out/
+tmp
 
 # Gradle files
 .gradle/

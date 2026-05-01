@@ -63,4 +63,9 @@
     <string name="mqtt_stato_connesso">MQTT connesso</string>
     <string name="mqtt_stato_disconnesso">MQTT disconnesso</string>
     <string name="costo_per_100km">Costo: %.2f €/100km</string>
+    <string name="consumo_km_per_l">Consumo: %.1f km/l</string>
+    <string name="consumo_l_per_100km">Consumo: %.2f L/100km</string>
+    <string name="unita_km_l">km/l</string>
+    <string name="unita_l_100km">L/100km</string>
+    <string name="azione_cambia_unita">Cambia unità di misura consumo</string>
 </resources>

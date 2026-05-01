@@ -28,6 +28,7 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
     private final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ITALY);
     private OnRifornimentoActionListener listener;
+    private boolean useL100km = false;
 
     public void setOnRifornimentoActionListener(OnRifornimentoActionListener listener) {
         this.listener = listener;
@@ -36,6 +37,13 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
     public void setData(List<Rifornimento> data) {
         this.items = data;
         notifyDataSetChanged();
+    }
+
+    public void setUseL100km(boolean useL100km) {
+        if (this.useL100km != useL100km) {
+            this.useL100km = useL100km;
+            notifyDataSetChanged();
+        }
     }
 
     @NonNull
@@ -79,7 +87,14 @@ public class RifornimentoAdapter extends RecyclerView.Adapter<RifornimentoAdapte
             int kmPercorsi = successivo.getKm() - item.getKm();
             if (kmPercorsi > 0 && successivo.getQtaBenzina() > 0) {
                 double kmPerLitro = (double) kmPercorsi / successivo.getQtaBenzina();
-                holder.textConsumo.setText(String.format(Locale.ITALY, "Consumo: %.1f km/l", kmPerLitro));
+                if (useL100km) {
+                    double l100km = 100.0 / kmPerLitro;
+                    holder.textConsumo.setText(holder.itemView.getContext()
+                            .getString(R.string.consumo_l_per_100km, l100km));
+                } else {
+                    holder.textConsumo.setText(holder.itemView.getContext()
+                            .getString(R.string.consumo_km_per_l, kmPerLitro));
+                }
                 holder.textConsumo.setVisibility(View.VISIBLE);
 
                 // Costo per 100 km: (100 / km_per_litro) × prezzo_al_litro

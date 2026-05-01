@@ -74,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isLoadingVeicoli;
 
     private static final String PREF_SELECTED_VEICOLO = "selectedVeicoloId";
+    private static final String PREF_USE_L100KM = "useL100km";
+
+    private boolean useL100km;
+    private MenuItem toggleUnitItem;
 
     private FusedLocationProviderClient fusedLocationClient;
     private Location lastKnownLocation;
@@ -162,6 +166,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         recyclerView.setAdapter(adapter);
+
+        useL100km = getPreferences(MODE_PRIVATE).getBoolean(PREF_USE_L100KM, false);
+        adapter.setUseL100km(useL100km);
 
         fab = findViewById(R.id.fab);
         fab.setOnClickListener(v -> showAddDialog());
@@ -575,6 +582,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        toggleUnitItem = menu.findItem(R.id.action_toggle_unit);
+        updateToggleUnitItem();
         updateSyncStatusIcon(MqttSyncManager.getInstance(this).isConnected());
         return true;
     }
@@ -590,8 +599,21 @@ public class MainActivity extends AppCompatActivity {
                     isConnected ? R.string.mqtt_stato_connesso : R.string.mqtt_stato_disconnesso,
                     Toast.LENGTH_SHORT).show();
             return true;
+        } else if (item.getItemId() == R.id.action_toggle_unit) {
+            useL100km = !useL100km;
+            getPreferences(MODE_PRIVATE).edit()
+                    .putBoolean(PREF_USE_L100KM, useL100km)
+                    .apply();
+            adapter.setUseL100km(useL100km);
+            updateToggleUnitItem();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateToggleUnitItem() {
+        if (toggleUnitItem == null) return;
+        toggleUnitItem.setTitle(useL100km ? R.string.unita_l_100km : R.string.unita_km_l);
     }
 
     private void updateSyncStatusIcon(boolean isConnected) {

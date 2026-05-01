@@ -2,6 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_toggle_unit"
+        android:title="@string/unita_km_l"
+        android:contentDescription="@string/azione_cambia_unita"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_sync_status"
         android:icon="@drawable/ic_sync_disconnected"
         android:title="@string/mqtt_stato_disconnesso"
