@@ -16,6 +16,22 @@ if [ ! -d "$ANDROID_SDK" ]; then
     exit 1
 fi
 
+# Seleziona la JDK dichiarata in .sdkmanrc (AGP 8.2 richiede la 17).
+SDKMAN_INIT="${SDKMAN_DIR:-$HOME/.sdkman}/bin/sdkman-init.sh"
+if [ -f "$SDKMAN_INIT" ] && [ -f "$PROJECT_DIR/.sdkmanrc" ]; then
+    set +u   # sdkman-init.sh non e' compatibile con 'set -u'
+    # shellcheck source=/dev/null
+    source "$SDKMAN_INIT"
+    sdk env install   # no-op se la JDK e' gia' presente
+    sdk env
+    set -u
+    echo "[INFO] JDK: $(java -version 2>&1 | head -n 1)"
+else
+    echo "[WARN] SDKMAN o .sdkmanrc non trovati: uso la JDK di sistema."
+    echo "       JDK: $(java -version 2>&1 | head -n 1)"
+    echo "       Nota: con JDK diverse dalla 17 il build release fallisce nel lint."
+fi
+
 # Installa gradlew se non presente
 if [ ! -f "./gradlew" ]; then
     echo "[INFO] gradlew non trovato, lo scarico..."

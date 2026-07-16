@@ -1,0 +1,4 @@
+# JDK del progetto: AGP 8.2 richiede la 17.
+# Con JDK piu' recenti (es. 25) il task lintVitalAnalyzeRelease fallisce.
+# Applicata da build.sh via 'sdk env', o a mano con: sdk env
+java=17.0.9-tem
