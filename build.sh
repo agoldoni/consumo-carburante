@@ -7,7 +7,13 @@ cd "$PROJECT_DIR"
 # --- Configurazione ---
 ANDROID_SDK="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export ANDROID_HOME="$ANDROID_SDK"
-BUILD_TYPE="${1:-debug}"   # debug | release
+
+if [ $# -lt 1 ]; then
+    echo "[ERRORE] Argomento mancante."
+    echo "         Uso: $0 {debug|release|clean}"
+    exit 1
+fi
+BUILD_TYPE="$1"   # debug | release | clean
 
 # Verifica Android SDK
 if [ ! -d "$ANDROID_SDK" ]; then
@@ -56,12 +62,16 @@ case "$BUILD_TYPE" in
             echo "         Imposta KEYSTORE_FILE per un percorso diverso."
             exit 1
         fi
-        if [ -z "${KEYSTORE_PASSWORD:-}" ] || [ -z "${KEY_PASSWORD:-}" ]; then
+        if [ -z "${KEYSTORE_PASSWORD:-}" ]; then
             echo "[ERRORE] Per il build release servono le variabili d'ambiente:"
             echo "         export KEYSTORE_PASSWORD=<password>"
             echo "         export KEY_ALIAS=<alias>        (default: release)"
-            echo "         export KEY_PASSWORD=<password>"
+            echo "         export KEY_PASSWORD=<password>  (default: uguale a KEYSTORE_PASSWORD)"
             exit 1
+        fi
+        if [ -z "${KEY_PASSWORD:-}" ]; then
+            echo "[INFO] KEY_PASSWORD non impostata: uso KEYSTORE_PASSWORD."
+            export KEY_PASSWORD="$KEYSTORE_PASSWORD"
         fi
         echo "[INFO] Avvio build release..."
         ./gradlew assembleRelease
@@ -75,7 +85,7 @@ case "$BUILD_TYPE" in
         ;;
     *)
         echo "[ERRORE] Build type non valido: '$BUILD_TYPE'"
-        echo "         Uso: $0 [debug|release|clean]"
+        echo "         Uso: $0 {debug|release|clean}"
         exit 1
         ;;
 esac
