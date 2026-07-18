@@ -8,13 +8,13 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.hivemq.client.mqtt.MqttClient;
+import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3ClientBuilder;
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -31,7 +31,7 @@ public class MqttSyncManager {
     private final Handler mainHandler;
 
     private Mqtt3AsyncClient client;
-    private boolean connected;
+    private volatile boolean connected;
     private OnSyncDataReceivedListener listener;
     private OnConnectionStateChangedListener connectionListener;
 
@@ -76,7 +76,7 @@ public class MqttSyncManager {
         executor.execute(() -> {
             if (config.isConfigured() && !connected) {
                 connectInternal();
-            } else if (!config.isConfigured() && connected) {
+            } else if (!config.isConfigured() && client != null) {
                 disconnectInternal();
             }
         });
@@ -91,16 +91,37 @@ public class MqttSyncManager {
     }
 
     private void connectInternal() {
-        if (connected && client != null) {
+        if (client != null) {
+            // Il client esiste già: se la connessione è caduta ci pensa
+            // l'automatic reconnect, non va creato un secondo client.
             return;
         }
 
         try {
             Mqtt3ClientBuilder builder = MqttClient.builder()
                     .useMqttVersion3()
-                    .identifier("consumo-carburanti-" + UUID.randomUUID().toString().substring(0, 8))
+                    .identifier(config.getClientId())
                     .serverHost(config.getBrokerUrl())
-                    .serverPort(config.getPort());
+                    .serverPort(config.getPort())
+                    .automaticReconnectWithDefaultConfig()
+                    .addConnectedListener(context -> {
+                        connected = true;
+                        Log.i(TAG, "MQTT connected");
+                        notifyConnectionState(true);
+                        // Ad ogni (ri)connessione: riattiva le subscription e
+                        // riallinea lo stato (i retained coprono ciò che è arrivato offline)
+                        executor.execute(() -> {
+                            subscribeToTopics();
+                            publishAll();
+                        });
+                    })
+                    .addDisconnectedListener(context -> {
+                        if (connected) {
+                            Log.w(TAG, "MQTT connection lost: " + context.getCause().getMessage());
+                        }
+                        connected = false;
+                        notifyConnectionState(false);
+                    });
 
             if (config.isUseTls()) {
                 builder.sslWithDefaultConfig();
@@ -126,22 +147,15 @@ public class MqttSyncManager {
                         .join();
             }
 
-            connected = true;
-            Log.i(TAG, "MQTT connected");
-            notifyConnectionState(true);
-
-            subscribeToTopics();
-            publishAll();
-
         } catch (Exception e) {
+            // Il primo tentativo è fallito ma l'automatic reconnect continua
+            // a riprovare in background: il client resta valido.
             Log.e(TAG, "MQTT connection failed", e);
-            connected = false;
-            notifyConnectionState(false);
         }
     }
 
     private void disconnectInternal() {
-        if (client != null && connected) {
+        if (client != null) {
             try {
                 client.disconnect().join();
             } catch (Exception e) {
@@ -153,6 +167,20 @@ public class MqttSyncManager {
         notifyConnectionState(false);
     }
 
+    /**
+     * Da chiamare quando la configurazione MQTT viene salvata: chiude la
+     * connessione corrente (che usa i vecchi parametri e le vecchie topic)
+     * e riconnette con la nuova configurazione.
+     */
+    public void reconfigure() {
+        executor.execute(() -> {
+            disconnectInternal();
+            if (config.isConfigured()) {
+                connectInternal();
+            }
+        });
+    }
+
     private void subscribeToTopics() {
         if (client == null || !connected) return;
 
@@ -160,6 +188,7 @@ public class MqttSyncManager {
 
         client.subscribeWith()
                 .topicFilter("sync/" + groupId + "/veicoli/#")
+                .qos(MqttQos.AT_LEAST_ONCE)
                 .callback(this::handleIncoming)
                 .send()
                 .whenComplete((subAck, throwable) -> {
@@ -172,6 +201,7 @@ public class MqttSyncManager {
 
         client.subscribeWith()
                 .topicFilter("sync/" + groupId + "/rifornimenti/#")
+                .qos(MqttQos.AT_LEAST_ONCE)
                 .callback(this::handleIncoming)
                 .send()
                 .whenComplete((subAck, throwable) -> {
@@ -314,8 +344,14 @@ public class MqttSyncManager {
                 client.publishWith()
                         .topic(topic)
                         .payload(json.getBytes(StandardCharsets.UTF_8))
+                        .qos(MqttQos.AT_LEAST_ONCE)
                         .retain(true)
-                        .send();
+                        .send()
+                        .whenComplete((publish, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, "Full sync publish veicolo failed: " + topic, throwable);
+                            }
+                        });
             }
 
             List<Rifornimento> rifornimenti = db.rifornimentoDao().getAll();
@@ -325,8 +361,14 @@ public class MqttSyncManager {
                 client.publishWith()
                         .topic(topic)
                         .payload(json.getBytes(StandardCharsets.UTF_8))
+                        .qos(MqttQos.AT_LEAST_ONCE)
                         .retain(true)
-                        .send();
+                        .send()
+                        .whenComplete((publish, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, "Full sync publish rifornimento failed: " + topic, throwable);
+                            }
+                        });
             }
 
             Log.i(TAG, "Full sync: published " + veicoli.size() + " veicoli, " + rifornimenti.size() + " rifornimenti");
@@ -339,17 +381,28 @@ public class MqttSyncManager {
 
     public void publishRifornimento(Rifornimento r) {
         executor.execute(() -> {
-            if (!connected || client == null) return;
+            if (!connected || client == null) {
+                Log.w(TAG, "Not connected, rifornimento " + r.getId()
+                        + " will be published at next reconnect");
+                return;
+            }
             try {
                 String topic = "sync/" + config.getGroupId() + "/rifornimenti/" + r.getId();
                 String json = gson.toJson(r);
                 client.publishWith()
                         .topic(topic)
                         .payload(json.getBytes(StandardCharsets.UTF_8))
+                        .qos(MqttQos.AT_LEAST_ONCE)
                         .retain(true)
-                        .send();
-                Log.i(TAG, "Published rifornimento: " + r.getId());
-                showToast(R.string.mqtt_inviato);
+                        .send()
+                        .whenComplete((publish, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, "Publish rifornimento failed: " + r.getId(), throwable);
+                            } else {
+                                Log.i(TAG, "Published rifornimento: " + r.getId());
+                                showToast(R.string.mqtt_inviato);
+                            }
+                        });
             } catch (Exception e) {
                 Log.e(TAG, "Publish rifornimento failed", e);
             }
@@ -358,17 +411,28 @@ public class MqttSyncManager {
 
     public void publishVeicolo(Veicolo v) {
         executor.execute(() -> {
-            if (!connected || client == null) return;
+            if (!connected || client == null) {
+                Log.w(TAG, "Not connected, veicolo " + v.getId()
+                        + " will be published at next reconnect");
+                return;
+            }
             try {
                 String topic = "sync/" + config.getGroupId() + "/veicoli/" + v.getId();
                 String json = gson.toJson(v);
                 client.publishWith()
                         .topic(topic)
                         .payload(json.getBytes(StandardCharsets.UTF_8))
+                        .qos(MqttQos.AT_LEAST_ONCE)
                         .retain(true)
-                        .send();
-                Log.i(TAG, "Published veicolo: " + v.getId());
-                showToast(R.string.mqtt_inviato_veicolo);
+                        .send()
+                        .whenComplete((publish, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, "Publish veicolo failed: " + v.getId(), throwable);
+                            } else {
+                                Log.i(TAG, "Published veicolo: " + v.getId());
+                                showToast(R.string.mqtt_inviato_veicolo);
+                            }
+                        });
             } catch (Exception e) {
                 Log.e(TAG, "Publish veicolo failed", e);
             }
@@ -383,9 +447,16 @@ public class MqttSyncManager {
                 client.publishWith()
                         .topic(topic)
                         .payload(new byte[0])
+                        .qos(MqttQos.AT_LEAST_ONCE)
                         .retain(true)
-                        .send();
-                Log.i(TAG, "Published delete rifornimento: " + id);
+                        .send()
+                        .whenComplete((publish, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, "Publish delete rifornimento failed: " + id, throwable);
+                            } else {
+                                Log.i(TAG, "Published delete rifornimento: " + id);
+                            }
+                        });
             } catch (Exception e) {
                 Log.e(TAG, "Publish delete rifornimento failed", e);
             }
@@ -400,9 +471,16 @@ public class MqttSyncManager {
                 client.publishWith()
                         .topic(topic)
                         .payload(new byte[0])
+                        .qos(MqttQos.AT_LEAST_ONCE)
                         .retain(true)
-                        .send();
-                Log.i(TAG, "Published delete veicolo: " + id);
+                        .send()
+                        .whenComplete((publish, throwable) -> {
+                            if (throwable != null) {
+                                Log.e(TAG, "Publish delete veicolo failed: " + id, throwable);
+                            } else {
+                                Log.i(TAG, "Published delete veicolo: " + id);
+                            }
+                        });
             } catch (Exception e) {
                 Log.e(TAG, "Publish delete veicolo failed", e);
             }

@@ -13,6 +13,7 @@ public class MqttConfig {
     private static final String KEY_PASSWORD = "mqtt_password";
     private static final String KEY_GROUP_ID = "mqtt_group_id";
     private static final String KEY_USE_TLS = "mqtt_use_tls";
+    private static final String KEY_CLIENT_ID = "mqtt_client_id";
 
     private final SharedPreferences prefs;
 
@@ -47,6 +48,20 @@ public class MqttConfig {
 
     public boolean isUseTls() {
         return prefs.getBoolean(KEY_USE_TLS, true);
+    }
+
+    /**
+     * Client id MQTT stabile per questa installazione. Necessario perché con
+     * cleanSession(false) il broker identifica la sessione tramite client id:
+     * un id casuale ad ogni connessione impedirebbe di riprendere la sessione.
+     */
+    public String getClientId() {
+        String clientId = prefs.getString(KEY_CLIENT_ID, null);
+        if (clientId == null) {
+            clientId = "consumo-carburanti-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+            prefs.edit().putString(KEY_CLIENT_ID, clientId).apply();
+        }
+        return clientId;
     }
 
     public void save(boolean enabled, String brokerUrl, int port,

@@ -104,7 +104,9 @@ public class MqttConfigActivity extends AppCompatActivity {
         config.save(enabled, brokerUrl, port, username, password, groupId, useTls);
         Toast.makeText(this, R.string.mqtt_config_salvata, Toast.LENGTH_SHORT).show();
 
-        MqttSyncManager.getInstance(this).reconnectIfNeeded();
+        // Riconnette con i nuovi parametri anche se una connessione
+        // con la vecchia configurazione era già attiva
+        MqttSyncManager.getInstance(this).reconfigure();
     }
 
     private void testConnection() {
