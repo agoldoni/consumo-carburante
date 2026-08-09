@@ -71,3 +71,9 @@ Minimal: `appcompat:1.6.1`, `material:1.11.0`, `constraintlayout:2.1.4`. No netw
      - Generare `docs/features/xxx/plan.md` (piano di implementazione)
      - Implementare la feature
      - Generare `docs/features/xxx/implementation.md` (documentazione di quanto fatto)
+
+## Git
+
+- **Non creare branch senza il permesso esplicito dell'utente.** In questo progetto si lavora
+  direttamente su `main`: quando l'utente chiede un commit, committa su `main`. Se pensi che
+  serva un branch, chiedilo prima invece di crearlo.
