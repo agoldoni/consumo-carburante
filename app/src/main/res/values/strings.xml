@@ -68,4 +68,120 @@
     <string name="unita_km_l">km/l</string>
     <string name="unita_l_100km">L/100km</string>
     <string name="azione_cambia_unita">Cambia unità di misura consumo</string>
+
+    <!-- Diagnostica sincronizzazione -->
+    <string name="menu_sync_status">Diagnostica sync</string>
+    <string name="sync_stato_connesso">Connesso</string>
+    <string name="sync_stato_disconnesso">Disconnesso</string>
+    <string name="sync_stato_connessione">Connessione in corso…</string>
+    <string name="sync_stato_riconnessione">Riconnessione in corso…</string>
+    <string name="sync_stato_attesa_riconnessione">In attesa di riconnessione</string>
+    <string name="sync_stato_non_avviato">Sync non avviata</string>
+    <string name="sync_non_configurata">Sincronizzazione non configurata: impostala dal menu «Sincronizzazione MQTT»</string>
+    <string name="sync_disabilitata">Sincronizzazione disabilitata nelle impostazioni</string>
+    <string name="sync_config_broker">Broker: %1$s:%2$d (%3$s)</string>
+    <string name="sync_config_tls">TLS</string>
+    <string name="sync_config_no_tls">senza TLS</string>
+    <string name="sync_config_gruppo">Gruppo: %1$s</string>
+    <string name="sync_config_client">Client id: %1$s</string>
+    <string name="sync_ultima_connessione">Ultima connessione: %1$s</string>
+    <string name="sync_ultima_disconnessione">Ultima disconnessione: %1$s</string>
+    <string name="sync_mai">mai</string>
+    <string name="sync_ultimo_errore">Ultimo errore (%1$s): %2$s</string>
+    <string name="sync_contatore_inviati">inviati</string>
+    <string name="sync_contatore_ricevuti">ricevuti</string>
+    <string name="sync_contatore_falliti">falliti</string>
+    <string name="sync_contatore_cadute">cadute</string>
+    <string name="sync_riconnetti">Riconnetti ora</string>
+    <string name="sync_riconnessione_avviata">Riconnessione avviata</string>
+    <string name="sync_eventi">Eventi recenti</string>
+    <string name="sync_eventi_conteggio">Eventi recenti (%1$d)</string>
+    <string name="sync_nessun_evento">Nessun evento registrato</string>
+    <string name="sync_condividi_log">Condividi log</string>
+    <string name="sync_svuota_log">Svuota log</string>
+    <string name="sync_conferma_svuota">Cancellare il diario degli eventi e azzerare i contatori?</string>
+    <string name="sync_log_svuotato">Diario svuotato</string>
+    <string name="sync_log_titolo_condivisione">Log sincronizzazione</string>
+
+    <!-- Sincronizzazione via Bluetooth -->
+    <string name="ok">OK</string>
+    <string name="menu_sync_bluetooth">Sync Bluetooth</string>
+    <string name="bt_intro">Scambia le auto in comune con un altro telefono che ha questa app, senza bisogno di internet. I due telefoni devono essere vicini e con il Bluetooth acceso.</string>
+    <string name="bt_condividi">Condividi le mie auto</string>
+    <string name="bt_ricevi">Ricevi da un altro telefono</string>
+
+    <string name="bt_seleziona_auto">Scegli le auto da proporre all\'altro telefono. Riceverai indietro i suoi rifornimenti per le stesse auto.</string>
+    <string name="bt_avanti">Avanti</string>
+    <string name="bt_scegli_dispositivo">Tocca il telefono a cui collegarti. Se non compare, fallo mettere in attesa con «Ricevi» e avvia la ricerca.</string>
+    <string name="bt_cerca_dispositivi">Cerca dispositivi</string>
+    <string name="bt_dispositivo_senza_nome">Dispositivo senza nome</string>
+    <string name="bt_ricerca_fallita">Impossibile avviare la ricerca</string>
+    <string name="bt_nessun_dispositivo">Nessun dispositivo trovato</string>
+    <string name="bt_nessuna_auto_locale">Non hai ancora registrato nessuna auto</string>
+    <string name="bt_seleziona_almeno_una">Seleziona almeno un\'auto</string>
+    <string name="bt_permessi_negati">Senza i permessi Bluetooth la sincronizzazione non può funzionare</string>
+    <string name="bt_visibilita_negata">Senza visibilità funziona solo se i due telefoni sono già accoppiati</string>
+
+    <string name="bt_destinazione">Dove finiranno i dati</string>
+    <string name="bt_crea_nuova">Crea una nuova auto</string>
+    <string name="bt_collega_a">Collega a «%1$s»</string>
+    <string name="bt_gia_condivisa">Auto già condivisa con questo telefono: i dati si uniranno da soli.</string>
+    <string name="bt_periodo">dal %1$s al %2$s</string>
+    <string name="bt_nota_collegamento">Collegando un\'auto a una già presente, quella locale ne adotta l\'identificativo: da qui in avanti i due telefoni la riconosceranno da soli.</string>
+    <string name="bt_accetta">Accetta</string>
+    <string name="bt_rifiuta">Rifiuta</string>
+    <string name="bt_offerta_vuota">L\'altro telefono non ha proposto nessuna auto</string>
+
+    <string name="bt_codice_titolo">Codice di verifica</string>
+    <string name="bt_codice_con">Collegato a %1$s</string>
+    <string name="bt_codice_spiegazione">Lo stesso codice deve comparire su entrambi i telefoni. Confrontatelo a voce prima di procedere.</string>
+    <string name="bt_codice_coincide">Coincide</string>
+    <string name="bt_codice_diverso">È diverso</string>
+
+    <string name="bt_stato_attesa_connessione">In attesa dell\'altro telefono…</string>
+    <string name="bt_stato_visibile_per">Questo telefono è visibile per %1$d secondi</string>
+    <string name="bt_stato_connessione">Connessione a %1$s…</string>
+    <string name="bt_stato_verifica">Riconoscimento in corso…</string>
+    <string name="bt_stato_attesa_scelta">In attesa della scelta sull\'altro telefono…</string>
+    <string name="bt_stato_trasferimento">Scambio dei dati in corso…</string>
+
+    <string name="bt_fase_attesa_connessione">attesa della connessione</string>
+    <string name="bt_fase_connessione">connessione</string>
+    <string name="bt_fase_handshake">riconoscimento</string>
+    <string name="bt_fase_conferma_codice">conferma del codice</string>
+    <string name="bt_fase_attesa_offerta">attesa della proposta</string>
+    <string name="bt_fase_attesa_accettazione">attesa dell\'accettazione</string>
+    <string name="bt_fase_ricezione">ricezione dei dati</string>
+    <string name="bt_fase_chiusura">chiusura della sessione</string>
+
+    <string name="bt_err_sessione_in_corso">C\'è già una sincronizzazione in corso</string>
+    <string name="bt_err_non_supportato">Questo dispositivo non supporta il Bluetooth</string>
+    <string name="bt_err_spento">Il Bluetooth è spento</string>
+    <string name="bt_err_versione">Le due app hanno versioni diverse del protocollo di sincronizzazione: aggiornale entrambe</string>
+    <string name="bt_err_timeout">Tempo scaduto durante: %1$s</string>
+    <string name="bt_errore_titolo">Sincronizzazione non riuscita</string>
+
+    <string name="bt_motivo_versione">versione di protocollo diversa</string>
+    <string name="bt_annullata_locale">Sincronizzazione annullata</string>
+    <string name="bt_annullata_generica">Sincronizzazione interrotta</string>
+    <string name="bt_annullata_timeout">Tempo scaduto in attesa di una risposta</string>
+    <string name="bt_annullata_codice_remoto">L\'altro telefono ha segnalato un codice diverso</string>
+    <string name="bt_annullata_nessuna_auto">Nessuna auto accettata</string>
+    <string name="bt_annullata_da_remoto">L\'altro telefono ha interrotto: %1$s</string>
+
+    <string name="bt_conferma_uscita_titolo">Uscire?</string>
+    <string name="bt_conferma_uscita">La sincronizzazione in corso verrà interrotta.</string>
+    <string name="bt_esci">Esci</string>
+
+    <string name="bt_riepilogo_titolo">Sincronizzazione completata</string>
+    <string name="bt_riepilogo_corpo">Auto nuove: %1$d\nAuto collegate: %2$d\nRifornimenti nuovi: %3$d\nRifornimenti aggiornati: %4$d\nRifornimenti inviati: %5$d</string>
+
+    <plurals name="bt_n_rifornimenti">
+        <item quantity="one">%d rifornimento</item>
+        <item quantity="other">%d rifornimenti</item>
+    </plurals>
+    <plurals name="bt_offerta_titolo">
+        <item quantity="one">Ti è stata proposta %d auto. Scegli se accettarla e dove finiranno i dati.</item>
+        <item quantity="other">Ti sono state proposte %d auto. Scegli quali accettare e dove finiranno i dati.</item>
+    </plurals>
 </resources>

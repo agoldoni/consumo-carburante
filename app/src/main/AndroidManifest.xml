@@ -6,6 +6,18 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
+    <!-- Sync via Bluetooth. Fino ad Android 11 servono i permessi storici (piu'
+         ACCESS_FINE_LOCATION, gia' dichiarato sopra, che la discovery esige);
+         da Android 12 li sostituiscono i due permessi runtime. Non ricaviamo
+         posizione dai dispositivi trovati, da qui neverForLocation. -->
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -29,6 +41,17 @@
 
         <activity
             android:name=".MqttConfigActivity"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".SyncStatusActivity"
+            android:parentActivityName=".MainActivity" />
+
+        <!-- La sessione Bluetooth vive nel manager e non sopravvive alla
+             ricreazione dell'activity: la rotazione va gestita senza ricreare. -->
+        <activity
+            android:name=".BluetoothSyncActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".MainActivity" />
 
         <provider

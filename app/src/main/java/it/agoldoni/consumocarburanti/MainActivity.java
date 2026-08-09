@@ -123,6 +123,10 @@ public class MainActivity extends AppCompatActivity {
                 importFileLauncher.launch(new String[]{"text/*"});
             } else if (item.getItemId() == R.id.nav_sync) {
                 startActivity(new Intent(this, MqttConfigActivity.class));
+            } else if (item.getItemId() == R.id.nav_sync_status) {
+                startActivity(new Intent(this, SyncStatusActivity.class));
+            } else if (item.getItemId() == R.id.nav_sync_bluetooth) {
+                startActivity(new Intent(this, BluetoothSyncActivity.class));
             } else if (item.getItemId() == R.id.nav_info) {
                 showInfoDialog();
             }
@@ -594,10 +598,7 @@ public class MainActivity extends AppCompatActivity {
             shareData();
             return true;
         } else if (item.getItemId() == R.id.action_sync_status) {
-            boolean isConnected = MqttSyncManager.getInstance(this).isConnected();
-            Toast.makeText(this,
-                    isConnected ? R.string.mqtt_stato_connesso : R.string.mqtt_stato_disconnesso,
-                    Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, SyncStatusActivity.class));
             return true;
         } else if (item.getItemId() == R.id.action_toggle_unit) {
             useL100km = !useL100km;

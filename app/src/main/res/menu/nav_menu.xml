@@ -13,6 +13,14 @@
         android:icon="@android:drawable/ic_popup_sync"
         android:title="@string/menu_sync" />
     <item
+        android:id="@+id/nav_sync_status"
+        android:icon="@drawable/ic_sync_connected"
+        android:title="@string/menu_sync_status" />
+    <item
+        android:id="@+id/nav_sync_bluetooth"
+        android:icon="@drawable/ic_bluetooth"
+        android:title="@string/menu_sync_bluetooth" />
+    <item
         android:id="@+id/nav_info"
         android:icon="@android:drawable/ic_menu_info_details"
         android:title="@string/menu_info" />

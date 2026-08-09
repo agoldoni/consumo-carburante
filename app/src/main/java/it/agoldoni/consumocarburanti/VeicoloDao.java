@@ -17,6 +17,9 @@ public interface VeicoloDao {
     @Query("SELECT * FROM veicoli WHERE id = :id")
     Veicolo getById(String id);
 
+    @Query("SELECT * FROM veicoli WHERE id IN (:ids) ORDER BY nome ASC")
+    List<Veicolo> getByIds(List<String> ids);
+
     @Insert
     void insert(Veicolo veicolo);
 
