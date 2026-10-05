@@ -5,6 +5,10 @@
         android:icon="@android:drawable/ic_menu_manage"
         android:title="@string/menu_auto" />
     <item
+        android:id="@+id/nav_manutenzioni"
+        android:icon="@drawable/ic_manutenzione"
+        android:title="@string/menu_manutenzioni" />
+    <item
         android:id="@+id/nav_import"
         android:icon="@drawable/ic_import"
         android:title="@string/importa_dati" />

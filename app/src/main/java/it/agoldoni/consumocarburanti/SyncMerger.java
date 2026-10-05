@@ -9,8 +9,9 @@ import android.content.Context;
  * in un unico punto evita che i due canali divergano.
  *
  * <p>Il merge non cancella mai nulla: le eliminazioni sono un'operazione a
- * parte ({@link #deleteVeicolo}, {@link #deleteRifornimento}) che solo MQTT usa,
- * tramite i messaggi con payload vuoto.
+ * parte ({@link #deleteVeicolo}, {@link #deleteRifornimento},
+ * {@link #deleteManutenzione}) che solo MQTT usa, tramite i messaggi con
+ * payload vuoto.
  */
 public class SyncMerger {
 
@@ -21,8 +22,16 @@ public class SyncMerger {
         AGGIORNATO,
         /** Il record locale era gia' allineato (o piu' recente): nessuna modifica. */
         GIA_ALLINEATO,
-        /** Rifornimento scartato perche' il suo veicolo non esiste in locale. */
-        SCARTATO_FK
+        /** Record scartato perche' il suo veicolo non esiste in locale. */
+        SCARTATO_FK,
+        /** Record scartato perche' privo di un campo obbligatorio. */
+        SCARTATO_INVALIDO
+    }
+
+    /** Quanti record hanno seguito l'auto nel cambio di identificativo. */
+    public static class Spostamento {
+        public int rifornimenti;
+        public int manutenzioni;
     }
 
     private final AppDatabase db;
@@ -79,6 +88,41 @@ public class SyncMerger {
         return Esito.GIA_ALLINEATO;
     }
 
+    public Esito applyManutenzione(Manutenzione remote) {
+        // Gson lascia null i campi che il JSON non porta: senza questo controllo
+        // il NOT NULL farebbe fallire l'insert e, nel Bluetooth, annullerebbe
+        // l'intera transazione della sessione
+        if (remote.getId() == null || remote.getData() == null || remote.getTipo() == null) {
+            return Esito.SCARTATO_INVALIDO;
+        }
+
+        if (remote.getVeicoloId() != null
+                && db.veicoloDao().getById(remote.getVeicoloId()) == null) {
+            return Esito.SCARTATO_FK;
+        }
+
+        Manutenzione local = db.manutenzioneDao().getById(remote.getId());
+
+        if (local == null) {
+            db.manutenzioneDao().insert(remote);
+            return Esito.INSERITO;
+        }
+
+        if (remote.getUpdatedAt() > local.getUpdatedAt()) {
+            local.setData(remote.getData());
+            local.setTipo(remote.getTipo());
+            local.setDescrizione(remote.getDescrizione());
+            local.setKm(remote.getKm());
+            local.setCosto(remote.getCosto());
+            local.setVeicoloId(remote.getVeicoloId());
+            local.setUpdatedAt(remote.getUpdatedAt());
+            db.manutenzioneDao().update(local);
+            return Esito.AGGIORNATO;
+        }
+
+        return Esito.GIA_ALLINEATO;
+    }
+
     /** @return il veicolo eliminato, oppure null se non era presente. */
     public Veicolo deleteVeicolo(String id) {
         Veicolo existing = db.veicoloDao().getById(id);
@@ -97,27 +141,37 @@ public class SyncMerger {
         return existing;
     }
 
+    /** @return la manutenzione eliminata, oppure null se non era presente. */
+    public Manutenzione deleteManutenzione(String id) {
+        Manutenzione existing = db.manutenzioneDao().getById(id);
+        if (existing != null) {
+            db.manutenzioneDao().delete(existing);
+        }
+        return existing;
+    }
+
     /**
      * Fa adottare al veicolo locale {@code idLocale} l'identificativo del
      * veicolo {@code remoto}, cosi' che le due installazioni indichino la stessa
      * auto con lo stesso id e da qui in avanti si riconoscano da sole.
      *
      * <p>SQLite non permette di cambiare una chiave primaria referenziata:
-     * l'ordine delle tre operazioni e' vincolante. Il nuovo veicolo va inserito
-     * prima di ripuntare i rifornimenti (vincolo di foreign key) e il vecchio va
-     * eliminato dopo, quando non ha piu' figli, altrimenti la
-     * {@code ON DELETE CASCADE} porterebbe via lo storico.
+     * l'ordine delle operazioni e' vincolante. Il nuovo veicolo va inserito
+     * prima di ripuntare rifornimenti e manutenzioni (vincolo di foreign key) e
+     * il vecchio va eliminato dopo, quando non ha piu' figli, altrimenti la
+     * {@code ON DELETE CASCADE} porterebbe via lo storico. Ogni tabella figlia
+     * aggiunta in futuro va ripuntata qui.
      *
-     * @return il numero di rifornimenti ripuntati sul nuovo id
+     * @return quanti record sono stati ripuntati sul nuovo id
      */
-    public int adottaIdVeicolo(String idLocale, Veicolo remoto) {
+    public Spostamento adottaIdVeicolo(String idLocale, Veicolo remoto) {
+        final Spostamento spostati = new Spostamento();
         if (idLocale.equals(remoto.getId())) {
             // Le due installazioni usano gia' lo stesso id: il normale merge basta
             applyVeicolo(remoto);
-            return 0;
+            return spostati;
         }
 
-        final int[] spostati = new int[1];
         db.runInTransaction(() -> {
             Veicolo vecchio = db.veicoloDao().getById(idLocale);
 
@@ -127,14 +181,17 @@ public class SyncMerger {
                 applyVeicolo(remoto);
             }
 
-            spostati[0] = db.rifornimentoDao().reassignVeicolo(
-                    idLocale, remoto.getId(), System.currentTimeMillis());
+            long quando = System.currentTimeMillis();
+            spostati.rifornimenti = db.rifornimentoDao().reassignVeicolo(
+                    idLocale, remoto.getId(), quando);
+            spostati.manutenzioni = db.manutenzioneDao().reassignVeicolo(
+                    idLocale, remoto.getId(), quando);
 
             if (vecchio != null) {
                 db.veicoloDao().delete(vecchio);
             }
         });
-        return spostati[0];
+        return spostati;
     }
 
     /**

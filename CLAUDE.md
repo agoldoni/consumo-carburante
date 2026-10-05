@@ -56,21 +56,21 @@ Minimal: `appcompat:1.6.1`, `material:1.11.0`, `constraintlayout:2.1.4`. No netw
 
 ## Conventions
 
-- Per ogni feature, creare una cartella `docs/features/{nome_feature}/` contenente 3 file:
-  1. **`prompt.md`** — descrizione e specifiche della feature (cosa fare, requisiti, vincoli)
-  2. **`plan.md`** — piano di implementazione dettagliato (step, file coinvolti, dipendenze)
-  3. **`implementation.md`** — documentazione dell'implementazione (cosa è stato fatto, decisioni prese, note)
-
-- Il nome della cartella feature deve essere breve, lowercase, con `-` al posto degli spazi. Se il nome fornito dall'utente è troppo lungo o contiene caratteri speciali, Claude sceglie un nome sintetico adatto (es. "nuova feature: Gestione importazione CSV con validazione" → `import-csv`).
-- Quando l'utente scrive **"nuova feature: xxx"**, devi:
-  1. Creare la cartella `docs/features/xxx/`
-  2. Entrare in **plan mode** (modello **Opus**) e discutere con l'utente per capire requisiti e specifiche
-  3. Al termine della conversazione iniziale, Claude genera `docs/features/xxx/prompt.md` con la sintesi dei requisiti raccolti
-  4. Restare in plan mode finché l'utente non conferma che il prompt è completo
-  5. Quando l'utente conferma, uscire da plan mode e usare modello **Sonnet** per:
-     - Generare `docs/features/xxx/plan.md` (piano di implementazione)
-     - Implementare la feature
-     - Generare `docs/features/xxx/implementation.md` (documentazione di quanto fatto)
+- Le feature si pianificano e documentano con la skill **`claude-code-feature`**
+  (`/claude-code-feature <descrizione>`), anche quando l'utente scrive **"nuova feature: xxx"**.
+- Ogni feature ha la cartella `docs/features/NNN-slug/`: `NNN` è un progressivo a 3 cifre
+  (massimo prefisso esistente + 1), `slug` è breve, lowercase, con `-` al posto degli spazi (es.
+  "Gestione importazione CSV con validazione" → `002-import-csv`). Contiene un file per fase:
+  1. **`phase-1-requirements.md`** — obiettivo, scope, user story, criteri di accettazione, rischi,
+     stima, milestone
+  2. **`phase-2-analysis.md`** — analisi della codebase: file coinvolti, contratti, pattern da
+     rispettare, test, rischi aggiornati, prerequisiti
+  3. **`phase-3-implementation-plan.md`** — piano di implementazione da approvare; a lavori finiti
+     si completa con la sezione **"Esito dell'implementazione"** (cosa è stato fatto, scostamenti
+     dal piano, esito delle prove)
+- Si passa alla fase successiva solo dopo la conferma esplicita dell'utente.
+- Le cartelle senza prefisso numerico (`sync-bluetooth`, `sync-diagnostics`) seguono la
+  convenzione precedente (`prompt.md`, `plan.md`, `implementation.md`) e restano com'erano.
 
 ## Git
 

@@ -447,7 +447,10 @@ public class BluetoothSyncActivity extends AppCompatActivity
                 riepilogo.veicoliCollegati,
                 riepilogo.rifornimentiNuovi,
                 riepilogo.rifornimentiAggiornati,
-                riepilogo.rifornimentiInviati);
+                riepilogo.rifornimentiInviati,
+                riepilogo.manutenzioniNuove,
+                riepilogo.manutenzioniAggiornate,
+                riepilogo.manutenzioniInviate);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.bt_riepilogo_titolo)
                 .setMessage(corpo)

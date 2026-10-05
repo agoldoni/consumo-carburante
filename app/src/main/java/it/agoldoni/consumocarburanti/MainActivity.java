@@ -119,6 +119,9 @@ public class MainActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(item -> {
             if (item.getItemId() == R.id.nav_auto) {
                 startActivity(new Intent(this, VeicoloActivity.class));
+            } else if (item.getItemId() == R.id.nav_manutenzioni) {
+                startActivity(new Intent(this, ManutenzioneActivity.class)
+                        .putExtra(ManutenzioneActivity.EXTRA_VEICOLO_ID, selectedVeicoloId));
             } else if (item.getItemId() == R.id.nav_import) {
                 importFileLauncher.launch(new String[]{"text/*"});
             } else if (item.getItemId() == R.id.nav_sync) {
@@ -138,9 +141,8 @@ public class MainActivity extends AppCompatActivity {
         rifornimentoDao = db.rifornimentoDao();
         veicoloDao = db.veicoloDao();
 
-        MqttSyncManager syncManager = MqttSyncManager.getInstance(this);
-        syncManager.setOnSyncDataReceivedListener(this::loadVeicoli);
-        syncManager.setOnConnectionStateChangedListener(this::updateSyncStatusIcon);
+        MqttSyncManager.getInstance(this)
+                .setOnConnectionStateChangedListener(this::updateSyncStatusIcon);
 
         emptyView = findViewById(R.id.emptyView);
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
@@ -202,8 +204,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Il listener dei dati MQTT e' unico e lo usa anche ManutenzioneActivity:
+        // lo si riprende a ogni ritorno in primo piano e lo si rilascia in onPause
+        MqttSyncManager syncManager = MqttSyncManager.getInstance(this);
+        syncManager.setOnSyncDataReceivedListener(this::loadVeicoli);
         loadVeicoli();
-        MqttSyncManager.getInstance(this).reconnectIfNeeded();
+        syncManager.reconnectIfNeeded();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MqttSyncManager.getInstance(this).setOnSyncDataReceivedListener(null);
     }
 
     private boolean hasLocationPermission() {

@@ -9,13 +9,14 @@ import androidx.room.RoomDatabase;
 import androidx.room.migration.Migration;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-@Database(entities = {Rifornimento.class, Veicolo.class}, version = 5, exportSchema = false)
+@Database(entities = {Rifornimento.class, Veicolo.class, Manutenzione.class}, version = 6, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     private static volatile AppDatabase INSTANCE;
 
     public abstract RifornimentoDao rifornimentoDao();
     public abstract VeicoloDao veicoloDao();
+    public abstract ManutenzioneDao manutenzioneDao();
 
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
@@ -75,6 +76,32 @@ public abstract class AppDatabase extends RoomDatabase {
         }
     };
 
+    /**
+     * Tabella delle manutenzioni. Lo SQL e' copiato da AppDatabase_Impl generato
+     * da Room: con exportSchema = false non c'e' altro modo di verificare che
+     * coincida con lo schema atteso, e una differenza (nullabilita', indice,
+     * foreign key) manderebbe in crash l'app all'apertura del database.
+     */
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `manutenzioni` (" +
+                    "`id` TEXT NOT NULL, " +
+                    "`data` TEXT NOT NULL, " +
+                    "`tipo` TEXT NOT NULL, " +
+                    "`descrizione` TEXT, " +
+                    "`km` INTEGER, " +
+                    "`costo` REAL NOT NULL, " +
+                    "`veicolo_id` TEXT, " +
+                    "`updatedAt` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`id`), " +
+                    "FOREIGN KEY(`veicolo_id`) REFERENCES `veicoli`(`id`) " +
+                    "ON UPDATE NO ACTION ON DELETE CASCADE )");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_manutenzioni_veicolo_id` " +
+                    "ON `manutenzioni` (`veicolo_id`)");
+        }
+    };
+
     public static AppDatabase getInstance(Context context) {
         if (INSTANCE == null) {
             synchronized (AppDatabase.class) {
@@ -83,7 +110,8 @@ public abstract class AppDatabase extends RoomDatabase {
                             context.getApplicationContext(),
                             AppDatabase.class,
                             "consumo_carburanti_db"
-                    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5,
+                            MIGRATION_5_6)
                      .build();
                 }
             }

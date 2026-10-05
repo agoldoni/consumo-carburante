@@ -104,6 +104,10 @@ public class BluetoothSyncManager {
         public int rifornimentiAggiornati;
         public int rifornimentiScartati;
         public int rifornimentiInviati;
+        public int manutenzioniNuove;
+        public int manutenzioniAggiornate;
+        public int manutenzioniScartate;
+        public int manutenzioniInviate;
         /** Id locali sostituiti dall'adozione, da bonificare sul broker MQTT. */
         public final List<String> idSostituiti = new ArrayList<>();
     }
@@ -422,9 +426,15 @@ public class BluetoothSyncManager {
         }
 
         if (suo.protocol != BtMessages.PROTOCOL_VERSION) {
-            invia(out, new BtMessages.Reject(appContext.getString(R.string.bt_motivo_versione)));
             syncLog.error(SyncLog.CAT_BT, "Versione di protocollo incompatibile: remota "
                     + suo.protocol + ", locale " + BtMessages.PROTOCOL_VERSION);
+            try {
+                invia(out, new BtMessages.Reject(appContext.getString(R.string.bt_motivo_versione)));
+            } catch (IOException e) {
+                // L'altro lato fa lo stesso controllo e puo' aver gia' chiuso il
+                // socket: l'errore da mostrare resta quello di versione
+                Log.w(TAG, "Rifiuto per versione non consegnato", e);
+            }
             notificaErrore(appContext.getString(R.string.bt_err_versione));
             return;
         }
@@ -506,6 +516,7 @@ public class BluetoothSyncManager {
         notificaFase(Fase.TRASFERIMENTO, null);
         BtMessages.DataPayload miei = raccogli(condivisi);
         riepilogo.rifornimentiInviati = miei.rifornimenti.size();
+        riepilogo.manutenzioniInviate = miei.manutenzioni.size();
         invia(out, miei);
 
         BtMessages.DataPayload suoi = leggi(in, BtMessages.DataPayload.class, BtMessages.TYPE_DATA,
@@ -543,12 +554,13 @@ public class BluetoothSyncManager {
         for (BtMessages.AutoAccettata a : scelte) {
             condivisi.add(a.remoteId);
         }
-        // L'adozione degli id avviene qui dentro, prima di rispondere: cosi' i
-        // nostri rifornimenti partono gia' con il veicolo_id condiviso
+        // L'adozione degli id avviene qui dentro, prima di rispondere: cosi'
+        // rifornimenti e manutenzioni nostri partono gia' con il veicolo_id condiviso
         applica(suoi, condivisi, scelte, riepilogo);
 
         BtMessages.DataPayload miei = raccogli(condivisi);
         riepilogo.rifornimentiInviati = miei.rifornimenti.size();
+        riepilogo.manutenzioniInviate = miei.manutenzioni.size();
         invia(out, miei);
     }
 
@@ -560,6 +572,10 @@ public class BluetoothSyncManager {
         Map<String, RifornimentoDao.Stats> perVeicolo = new HashMap<>();
         for (RifornimentoDao.Stats s : db.rifornimentoDao().statsByVeicoli(veicoloIds)) {
             perVeicolo.put(s.veicoloId, s);
+        }
+        Map<String, Integer> manutenzioniPerVeicolo = new HashMap<>();
+        for (ManutenzioneDao.Conteggio c : db.manutenzioneDao().countByVeicoli(veicoloIds)) {
+            manutenzioniPerVeicolo.put(c.veicoloId, c.conteggio);
         }
 
         List<BtMessages.VeicoloOfferto> offerti = new ArrayList<>();
@@ -575,6 +591,8 @@ public class BluetoothSyncManager {
                 o.primo = s.primo;
                 o.ultimo = s.ultimo;
             }
+            Integer nManutenzioni = manutenzioniPerVeicolo.get(v.getId());
+            o.nManutenzioni = nManutenzioni != null ? nManutenzioni : 0;
             offerti.add(o);
         }
         syncLog.info(SyncLog.CAT_BT, "Proposte " + offerti.size() + " auto");
@@ -584,7 +602,8 @@ public class BluetoothSyncManager {
     private BtMessages.DataPayload raccogli(List<String> veicoloIds) {
         return new BtMessages.DataPayload(
                 db.veicoloDao().getByIds(veicoloIds),
-                db.rifornimentoDao().getByVeicoli(veicoloIds));
+                db.rifornimentoDao().getByVeicoli(veicoloIds),
+                db.manutenzioneDao().getByVeicoli(veicoloIds));
     }
 
     /**
@@ -613,12 +632,12 @@ public class BluetoothSyncManager {
                 Veicolo remoto = veicoliRemoti.get(a.remoteId);
                 if (remoto == null) continue;
 
-                int spostati = merger.adottaIdVeicolo(a.localId, remoto);
+                SyncMerger.Spostamento spostati = merger.adottaIdVeicolo(a.localId, remoto);
                 riepilogo.veicoliCollegati++;
                 riepilogo.idSostituiti.add(a.localId);
                 syncLog.info(SyncLog.CAT_BT, "Auto \"" + remoto.getNome()
-                        + "\" collegata a quella locale: " + spostati
-                        + " rifornimenti mantenuti");
+                        + "\" collegata a quella locale: " + spostati.rifornimenti
+                        + " rifornimenti e " + spostati.manutenzioni + " manutenzioni mantenuti");
             }
         }
 
@@ -660,6 +679,29 @@ public class BluetoothSyncManager {
                     }
                 }
             }
+
+            if (dati.manutenzioni != null) {
+                for (Manutenzione m : dati.manutenzioni) {
+                    if (m.getVeicoloId() == null || !ammessi.contains(m.getVeicoloId())) {
+                        riepilogo.manutenzioniScartate++;
+                        continue;
+                    }
+                    switch (merger.applyManutenzione(m)) {
+                        case INSERITO:
+                            riepilogo.manutenzioniNuove++;
+                            break;
+                        case AGGIORNATO:
+                            riepilogo.manutenzioniAggiornate++;
+                            break;
+                        case SCARTATO_FK:
+                        case SCARTATO_INVALIDO:
+                            riepilogo.manutenzioniScartate++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
         });
     }
 
@@ -672,7 +714,8 @@ public class BluetoothSyncManager {
     private void riallineaMqtt(Riepilogo riepilogo) {
         boolean qualcosaECambiato = riepilogo.veicoliNuovi + riepilogo.veicoliAggiornati
                 + riepilogo.veicoliCollegati + riepilogo.rifornimentiNuovi
-                + riepilogo.rifornimentiAggiornati > 0;
+                + riepilogo.rifornimentiAggiornati + riepilogo.manutenzioniNuove
+                + riepilogo.manutenzioniAggiornate > 0;
         if (!qualcosaECambiato) return;
 
         MqttSyncManager mqtt = MqttSyncManager.getInstance(appContext);
@@ -690,7 +733,11 @@ public class BluetoothSyncManager {
                 + r.rifornimentiNuovi + " rifornimenti nuovi, "
                 + r.rifornimentiAggiornati + " aggiornati, "
                 + r.rifornimentiScartati + " scartati, "
-                + r.rifornimentiInviati + " inviati";
+                + r.rifornimentiInviati + " inviati; "
+                + r.manutenzioniNuove + " manutenzioni nuove, "
+                + r.manutenzioniAggiornate + " aggiornate, "
+                + r.manutenzioniScartate + " scartate, "
+                + r.manutenzioniInviate + " inviate";
     }
 
     // --- Trasporto: frame lunghezza + JSON ---

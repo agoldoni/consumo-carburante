@@ -216,6 +216,8 @@ public class BtOfferAdapter extends RecyclerView.Adapter<BtOfferAdapter.ViewHold
                         formatoData.format(new Date(offerto.primo)),
                         formatoData.format(new Date(offerto.ultimo))));
             }
+            sb.append(" • ").append(context.getResources().getQuantityString(
+                    R.plurals.bt_n_manutenzioni, offerto.nManutenzioni, offerto.nManutenzioni));
             return sb.toString();
         }
     }

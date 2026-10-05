@@ -39,7 +39,7 @@ public class MqttSyncManager {
     private volatile boolean connected;
     private volatile int upToDateCount;
     private volatile String lastFailureCause;
-    private OnSyncDataReceivedListener listener;
+    private volatile OnSyncDataReceivedListener listener;
     private OnConnectionStateChangedListener connectionListener;
 
     private final Runnable logUpToDateSummary = new Runnable() {
@@ -269,6 +269,7 @@ public class MqttSyncManager {
 
         subscribe("sync/" + groupId + "/veicoli/#", "veicoli");
         subscribe("sync/" + groupId + "/rifornimenti/#", "rifornimenti");
+        subscribe("sync/" + groupId + "/manutenzioni/#", "manutenzioni");
     }
 
     private void subscribe(String topicFilter, String descrizione) {
@@ -299,6 +300,8 @@ public class MqttSyncManager {
                     handleVeicolo(topic, payload);
                 } else if (topic.contains("/rifornimenti/")) {
                     handleRifornimento(topic, payload);
+                } else if (topic.contains("/manutenzioni/")) {
+                    handleManutenzione(topic, payload);
                 } else {
                     syncLog.warn(SyncLog.CAT_RECV, "Messaggio su topic sconosciuto ignorato: " + topic);
                 }
@@ -402,6 +405,60 @@ public class MqttSyncManager {
         }
     }
 
+    private void handleManutenzione(String topic, byte[] payload) {
+        String id = topic.substring(topic.lastIndexOf('/') + 1);
+
+        if (payload.length == 0) {
+            // Delete signal
+            Manutenzione existing = merger.deleteManutenzione(id);
+            if (existing != null) {
+                Log.i(TAG, "Deleted manutenzione: " + id);
+                syncLog.recordReceived();
+                syncLog.info(SyncLog.CAT_RECV, "Manutenzione eliminata da remoto: " + id);
+                showToast(R.string.mqtt_eliminato_remoto);
+                notifyListener();
+            }
+            return;
+        }
+
+        String json = new String(payload, StandardCharsets.UTF_8);
+        Manutenzione remote = gson.fromJson(json, Manutenzione.class);
+        if (remote == null) {
+            syncLog.error(SyncLog.CAT_RECV, "Manutenzione " + id + " scartata: payload non leggibile");
+            return;
+        }
+
+        switch (merger.applyManutenzione(remote)) {
+            case SCARTATO_INVALIDO:
+                Log.w(TAG, "Skipping manutenzione " + id + ": missing required fields");
+                syncLog.error(SyncLog.CAT_RECV, "Manutenzione " + id
+                        + " scartata: data o tipo mancanti");
+                break;
+            case SCARTATO_FK:
+                Log.w(TAG, "Skipping manutenzione " + id + ": veicolo not found");
+                syncLog.warn(SyncLog.CAT_RECV, "Manutenzione " + id + " scartata: veicolo "
+                        + remote.getVeicoloId() + " non presente in locale");
+                break;
+            case INSERITO:
+                Log.i(TAG, "Inserted manutenzione: " + id);
+                syncLog.recordReceived();
+                syncLog.info(SyncLog.CAT_RECV, "Nuova manutenzione ricevuta: " + id);
+                showToast(R.string.mqtt_ricevuta_manutenzione);
+                notifyListener();
+                break;
+            case AGGIORNATO:
+                Log.i(TAG, "Updated manutenzione: " + id);
+                syncLog.recordReceived();
+                syncLog.info(SyncLog.CAT_RECV, "Manutenzione aggiornata da remoto: " + id);
+                showToast(R.string.mqtt_ricevuta_manutenzione);
+                notifyListener();
+                break;
+            default:
+                countUpToDate();
+                break;
+        }
+    }
+
     /**
      * Ad ogni riconnessione il broker rimanda tutti i messaggi retained, la
      * maggior parte dei quali già allineati: loggarli uno per uno riempirebbe
@@ -414,8 +471,11 @@ public class MqttSyncManager {
     }
 
     private void notifyListener() {
-        if (listener != null) {
-            mainHandler.post(() -> listener.onDataReceived());
+        // Copia locale: le activity rilasciano il listener in onPause, e il
+        // campo puo' tornare null prima che il messaggio venga eseguito
+        OnSyncDataReceivedListener l = listener;
+        if (l != null) {
+            mainHandler.post(l::onDataReceived);
         }
     }
 
@@ -433,8 +493,8 @@ public class MqttSyncManager {
 
     /**
      * Riallinea il broker con lo stato locale. Serve dopo una sessione di
-     * sincronizzazione Bluetooth, che puo' aver introdotto veicoli e
-     * rifornimenti che il broker non conosce. Se la connessione non e' attiva
+     * sincronizzazione Bluetooth, che puo' aver introdotto veicoli,
+     * rifornimenti e manutenzioni che il broker non conosce. Se la connessione non e' attiva
      * non fa nulla: ci pensera' la sync completa alla prossima riconnessione.
      */
     public void republishAll() {
@@ -457,9 +517,16 @@ public class MqttSyncManager {
                 publishFullSync("sync/" + groupId + "/rifornimenti/" + r.getId(), gson.toJson(r), "rifornimento");
             }
 
-            Log.i(TAG, "Full sync: published " + veicoli.size() + " veicoli, " + rifornimenti.size() + " rifornimenti");
+            List<Manutenzione> manutenzioni = db.manutenzioneDao().getAll();
+            for (Manutenzione m : manutenzioni) {
+                publishFullSync("sync/" + groupId + "/manutenzioni/" + m.getId(), gson.toJson(m), "manutenzione");
+            }
+
+            Log.i(TAG, "Full sync: published " + veicoli.size() + " veicoli, " + rifornimenti.size()
+                    + " rifornimenti, " + manutenzioni.size() + " manutenzioni");
             syncLog.info(SyncLog.CAT_PUB, "Sync completa avviata: " + veicoli.size()
-                    + " veicoli e " + rifornimenti.size() + " rifornimenti pubblicati");
+                    + " veicoli, " + rifornimenti.size() + " rifornimenti e "
+                    + manutenzioni.size() + " manutenzioni pubblicati");
         } catch (Exception e) {
             Log.e(TAG, "Full sync failed", e);
             syncLog.error(SyncLog.CAT_PUB, "Sync completa fallita", e);
@@ -499,8 +566,16 @@ public class MqttSyncManager {
         publish("veicoli", v.getId(), gson.toJson(v), "veicolo", R.string.mqtt_inviato_veicolo);
     }
 
+    public void publishManutenzione(Manutenzione m) {
+        publish("manutenzioni", m.getId(), gson.toJson(m), "manutenzione", R.string.mqtt_inviata_manutenzione);
+    }
+
     public void publishDeleteRifornimento(String id) {
         publish("rifornimenti", id, null, "eliminazione rifornimento", 0);
+    }
+
+    public void publishDeleteManutenzione(String id) {
+        publish("manutenzioni", id, null, "eliminazione manutenzione", 0);
     }
 
     public void publishDeleteVeicolo(String id) {

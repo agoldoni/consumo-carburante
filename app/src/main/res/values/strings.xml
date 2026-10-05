@@ -16,7 +16,7 @@
     <string name="targa">Targa</string>
     <string name="nuovo_veicolo">Nuovo Veicolo</string>
     <string name="modifica_veicolo">Modifica Veicolo</string>
-    <string name="conferma_elimina_veicolo">Eliminare questo veicolo e tutti i suoi rifornimenti?</string>
+    <string name="conferma_elimina_veicolo">Eliminare questo veicolo con tutti i suoi rifornimenti e le sue manutenzioni?</string>
     <string name="elimina">Elimina</string>
     <string name="seleziona_veicolo">Seleziona veicolo</string>
     <string name="nessun_veicolo">Nessun veicolo registrato</string>
@@ -69,6 +69,24 @@
     <string name="unita_l_100km">L/100km</string>
     <string name="azione_cambia_unita">Cambia unità di misura consumo</string>
 
+    <!-- Manutenzioni -->
+    <string name="menu_manutenzioni">Manutenzioni</string>
+    <string name="nuova_manutenzione">Nuova Manutenzione</string>
+    <string name="modifica_manutenzione">Modifica Manutenzione</string>
+    <string name="conferma_elimina_manutenzione">Eliminare questa manutenzione?</string>
+    <string name="nessuna_manutenzione">Nessuna manutenzione registrata</string>
+    <string name="data">Data</string>
+    <string name="tipo_manutenzione">Tipo</string>
+    <string name="tipo_altro">Altro</string>
+    <string name="tipo_tagliando">Tagliando</string>
+    <string name="tipo_revisione">Revisione</string>
+    <string name="descrizione">Descrizione</string>
+    <string name="chilometri_facoltativi">Chilometri (facoltativo)</string>
+    <string name="descrizione_obbligatoria_altro">Obbligatoria per il tipo «Altro»</string>
+    <string name="manutenzione_km">Km: %,d</string>
+    <string name="mqtt_inviata_manutenzione">Sync: inviata manutenzione</string>
+    <string name="mqtt_ricevuta_manutenzione">Sync: ricevuta manutenzione</string>
+
     <!-- Diagnostica sincronizzazione -->
     <string name="menu_sync_status">Diagnostica sync</string>
     <string name="sync_stato_connesso">Connesso</string>
@@ -110,7 +128,7 @@
     <string name="bt_condividi">Condividi le mie auto</string>
     <string name="bt_ricevi">Ricevi da un altro telefono</string>
 
-    <string name="bt_seleziona_auto">Scegli le auto da proporre all\'altro telefono. Riceverai indietro i suoi rifornimenti per le stesse auto.</string>
+    <string name="bt_seleziona_auto">Scegli le auto da proporre all\'altro telefono. Riceverai indietro i suoi rifornimenti e le sue manutenzioni per le stesse auto.</string>
     <string name="bt_avanti">Avanti</string>
     <string name="bt_scegli_dispositivo">Tocca il telefono a cui collegarti. Se non compare, fallo mettere in attesa con «Ricevi» e avvia la ricerca.</string>
     <string name="bt_cerca_dispositivi">Cerca dispositivi</string>
@@ -174,11 +192,15 @@
     <string name="bt_esci">Esci</string>
 
     <string name="bt_riepilogo_titolo">Sincronizzazione completata</string>
-    <string name="bt_riepilogo_corpo">Auto nuove: %1$d\nAuto collegate: %2$d\nRifornimenti nuovi: %3$d\nRifornimenti aggiornati: %4$d\nRifornimenti inviati: %5$d</string>
+    <string name="bt_riepilogo_corpo">Auto nuove: %1$d\nAuto collegate: %2$d\nRifornimenti nuovi: %3$d\nRifornimenti aggiornati: %4$d\nRifornimenti inviati: %5$d\nManutenzioni nuove: %6$d\nManutenzioni aggiornate: %7$d\nManutenzioni inviate: %8$d</string>
 
     <plurals name="bt_n_rifornimenti">
         <item quantity="one">%d rifornimento</item>
         <item quantity="other">%d rifornimenti</item>
+    </plurals>
+    <plurals name="bt_n_manutenzioni">
+        <item quantity="one">%d manutenzione</item>
+        <item quantity="other">%d manutenzioni</item>
     </plurals>
     <plurals name="bt_offerta_titolo">
         <item quantity="one">Ti è stata proposta %d auto. Scegli se accettarla e dove finiranno i dati.</item>

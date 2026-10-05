@@ -17,8 +17,14 @@ import java.util.Locale;
  */
 public final class BtMessages {
 
-    /** Incrementare a ogni modifica incompatibile del protocollo. */
-    public static final int PROTOCOL_VERSION = 1;
+    /**
+     * Incrementare a ogni modifica incompatibile del protocollo.
+     *
+     * <p>2: manutenzioni nel payload dati. Un telefono alla versione 1
+     * ignorerebbe il campo in silenzio, perdendo le manutenzioni ricevute
+     * senza avvisare: meglio rifiutare la sessione.
+     */
+    public static final int PROTOCOL_VERSION = 2;
 
     public static final String TYPE_HELLO = "HELLO";
     public static final String TYPE_HELLO_ACK = "HELLO_ACK";
@@ -71,7 +77,7 @@ public final class BtMessages {
         }
     }
 
-    /** Descrizione di un'auto proposta, senza i rifornimenti. */
+    /** Descrizione di un'auto proposta, senza i rifornimenti e le manutenzioni. */
     public static class VeicoloOfferto {
         public String id;
         public String nome;
@@ -80,6 +86,7 @@ public final class BtMessages {
         public int nRifornimenti;
         public long primo;
         public long ultimo;
+        public int nManutenzioni;
     }
 
     public static class Offer extends Busta {
@@ -140,14 +147,17 @@ public final class BtMessages {
     public static class DataPayload extends Busta {
         public List<Veicolo> veicoli;
         public List<Rifornimento> rifornimenti;
+        public List<Manutenzione> manutenzioni;
 
         public DataPayload() {
         }
 
-        public DataPayload(List<Veicolo> veicoli, List<Rifornimento> rifornimenti) {
+        public DataPayload(List<Veicolo> veicoli, List<Rifornimento> rifornimenti,
+                           List<Manutenzione> manutenzioni) {
             super(TYPE_DATA);
             this.veicoli = veicoli;
             this.rifornimenti = rifornimenti;
+            this.manutenzioni = manutenzioni;
         }
     }
 
