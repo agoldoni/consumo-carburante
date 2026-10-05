@@ -16,11 +16,11 @@ Android app "Consumo Carburanti" (fuel consumption tracker). Single-module proje
 ```bash
 # Debug APK
 ./gradlew assembleDebug
-# Output: app/build/outputs/apk/debug/app-debug.apk
+# Output: app/build/outputs/apk/debug/consumo_carburanti.apk
 
 # Release APK (unsigned)
 ./gradlew assembleRelease
-# Output: app/build/outputs/apk/release/app-release-unsigned.apk
+# Output: app/build/outputs/apk/release/consumo_carburanti.apk
 
 # Full build (compile + lint + test)
 ./gradlew build
@@ -35,7 +35,7 @@ Android app "Consumo Carburanti" (fuel consumption tracker). Single-module proje
 adb devices
 
 # send apk
-adb install app/build/outputs/apk/debug/app-debug.apk
+adb install app/build/outputs/apk/debug/consumo_carburanti.apk
 
 ```
 

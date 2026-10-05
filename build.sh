@@ -52,7 +52,7 @@ case "$BUILD_TYPE" in
     debug)
         echo "[INFO] Avvio build debug..."
         ./gradlew assembleDebug
-        APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+        APK_PATH="app/build/outputs/apk/debug/consumo_carburanti.apk"
         ;;
     release)
         # Verifica che le credenziali di firma siano disponibili
@@ -75,7 +75,7 @@ case "$BUILD_TYPE" in
         fi
         echo "[INFO] Avvio build release..."
         ./gradlew assembleRelease
-        APK_PATH="app/build/outputs/apk/release/app-release.apk"
+        APK_PATH="app/build/outputs/apk/release/consumo_carburanti.apk"
         ;;
     clean)
         echo "[INFO] Pulizia progetto..."
